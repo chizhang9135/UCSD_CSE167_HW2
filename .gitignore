@@ -39,3 +39,4 @@ build/
 # Vscode related
 .vscode
 __pycache__/
+/cmake-build-debug/
