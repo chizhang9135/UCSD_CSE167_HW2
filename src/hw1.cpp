@@ -84,6 +84,8 @@ Image3 hw_1_1(const std::vector<std::string> &params) {
     return img;
 }
 
+
+
 Image3 hw_1_2(const std::vector<std::string> &params) {
     // Homework 1.2: render multiple circles
     if (params.size() == 0) {
@@ -127,8 +129,6 @@ Image3 hw_1_2(const std::vector<std::string> &params) {
 
 
 
-
-
 Image3 hw_1_3(const std::vector<std::string> &params) {
     if (params.size() == 0) {
         return Image3(0, 0);
@@ -168,7 +168,6 @@ Image3 hw_1_3(const std::vector<std::string> &params) {
 
 
 
-
 Image3 hw_1_4(const std::vector<std::string> &params) {
     // Homework 1.4: render transformed shapes
     if (params.size() == 0) {
@@ -188,6 +187,8 @@ Image3 hw_1_4(const std::vector<std::string> &params) {
     return img;
 }
 
+
+
 Image3 hw_1_5(const std::vector<std::string> &params) {
     // Homework 1.5: antialiasing
     if (params.size() == 0) {
@@ -206,6 +207,8 @@ Image3 hw_1_5(const std::vector<std::string> &params) {
     }
     return img;
 }
+
+
 
 Image3 hw_1_6(const std::vector<std::string> &params) {
     // Homework 1.6: alpha blending
