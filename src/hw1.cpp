@@ -194,57 +194,42 @@ Image3 hw_1_5(const std::vector<std::string> &params) {
     Scene scene = parse_scene(params[0]);
     std::cout << scene << std::endl;
 
-    int samples = 4; // 4x4 sampling pattern
-    Image3 img(scene.resolution.x * samples, scene.resolution.y * samples);  // Upsample the image by 4x
+    Image3 img(scene.resolution.x, scene.resolution.y);
 
-    for (int base_y = 0; base_y < scene.resolution.y; base_y++) {
-        for (int base_x = 0; base_x < scene.resolution.x; base_x++) {
+    int samples = 4;  // 4x4 sampling pattern
 
-            for (int sub_y = 0; sub_y < samples; sub_y++) {
-                for (int sub_x = 0; sub_x < samples; sub_x++) {
-
-                    int x = base_x * samples + sub_x;
-                    int y = base_y * samples + sub_y;
-
-                    Vector2 pixel_point(base_x + (sub_x + Real(0.5)) / samples,
-                                        base_y + (sub_y + Real(0.5)) / samples);
-
-                    bool set_color = false;
+    for (int y = 0; y < img.height; y++) {
+        for (int x = 0; x < img.width; x++) {
+            // anti-aliasing samples*sample pixels
+            for (int i = 0; i < samples; i++) {
+                for (int j = 0; j < samples; j++) {
+                    Vector2 pixel_point(x + Real(i + 0.5) / samples, y + Real(j + 0.5) / samples);
+                    Vector3 pixel_color = scene.background;
 
                     for (const auto& shape : scene.shapes) {
                         if (auto *circle = std::get_if<Circle>(&shape)) {
                             if (is_inside_circle(pixel_point, *circle)) {
-                                img(x, y) = circle->color;
-                                set_color = true;
-                                break;
+                                pixel_color = circle->color;
                             }
                         } else if (auto *rectangle = std::get_if<Rectangle>(&shape)) {
                             if (is_inside_rectangle(pixel_point, *rectangle)) {
-                                img(x, y) = rectangle->color;
-                                set_color = true;
-                                break;
+                                pixel_color = rectangle->color;
                             }
                         } else if (auto *triangle = std::get_if<Triangle>(&shape)) {
                             if (is_inside_triangle(pixel_point, *triangle)) {
-                                img(x, y) = triangle->color;
-                                set_color = true;
-                                break;
+                                pixel_color = triangle->color;
                             }
                         }
                     }
-
-                    if (!set_color) {
-                        img(x, y) = scene.background;
-                    }
+                    img(x, y) += pixel_color;
                 }
             }
+            img(x, y) /= Real(samples * samples);
         }
     }
+
     return img;
 }
-
-
-
 
 
 
@@ -261,8 +246,38 @@ Image3 hw_1_6(const std::vector<std::string> &params) {
 
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
-            img(x, y) = Vector3{1, 1, 1};
+            Vector2 pixel_point{static_cast<Real>(x), static_cast<Real>(y)};
+            Vector3 pixel_color = scene.background; // start with background color
+
+            for (const auto& shape : scene.shapes) {
+                Vector3 current_shape_color;
+                Real current_shape_alpha = 0.0;
+
+                if (auto *circle = std::get_if<Circle>(&shape)) {
+                    if (is_inside_circle(pixel_point, *circle)) {
+                        current_shape_color = circle->color;
+                        current_shape_alpha = circle->alpha;
+                    }
+                } else if (auto *rectangle = std::get_if<Rectangle>(&shape)) {
+                    if (is_inside_rectangle(pixel_point, *rectangle)) {
+                        current_shape_color = rectangle->color;
+                        current_shape_alpha = rectangle->alpha;
+                    }
+                } else if (auto *triangle = std::get_if<Triangle>(&shape)) {
+                    if (is_inside_triangle(pixel_point, *triangle)) {
+                        current_shape_color = triangle->color;
+                        current_shape_alpha = triangle->alpha;
+                    }
+                }
+
+                // Blend this shape's color with the current pixel color
+                pixel_color = current_shape_alpha * current_shape_color + (1 - current_shape_alpha) * pixel_color;
+            }
+
+            img(x, y) = pixel_color;
         }
     }
+
     return img;
 }
+
