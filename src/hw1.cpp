@@ -3,6 +3,44 @@
 
 using namespace hw1;
 // TODO: office hours question: < or <= for determining whether a pixel is inside a shape
+// TODO: office hours question: the gray on my end is not the same as the gray on the pdf
+// TODO: office hours question: for hw1_1, do we allow to make Circle objects so that we can use the helper functions?
+
+// Helper functions to check whether a pixel is inside a shape
+bool is_inside_circle(const Vector2 &point, const Circle &circle) {
+    Real distance = length(point - circle.center);
+    return distance < circle.radius;
+}
+
+bool is_inside_rectangle(const Vector2 &point, const Rectangle &rectangle) {
+    return (point.x >= rectangle.p_min.x) && (point.x <= rectangle.p_max.x) &&
+           (point.y >= rectangle.p_min.y) && (point.y <= rectangle.p_max.y);
+}
+
+bool is_inside_triangle(const Vector2 &point, const Triangle &triangle) {
+    Vector2 edges[3] = {
+            triangle.p1 - triangle.p0,
+            triangle.p2 - triangle.p1,
+            triangle.p0 - triangle.p2
+    };
+
+    Vector2 normals[3] = {
+            {-edges[0].y, edges[0].x},
+            {-edges[1].y, edges[1].x},
+            {-edges[2].y, edges[2].x}
+    };
+
+    for (int i = 0; i < 3; i++) {
+        Vector2 v = point - (i == 0 ? triangle.p0 : (i == 1 ? triangle.p1 : triangle.p2));
+        if (v.x * normals[i].x + v.y * normals[i].y < 0) {
+            return false;  // Point is outside this edge
+        }
+    }
+
+    return true;
+}
+
+
 Image3 hw_1_1(const std::vector<std::string> &params) {
     // Homework 1.1: render a circle at the specified
     // position, with the specified radius and color.
@@ -32,12 +70,11 @@ Image3 hw_1_1(const std::vector<std::string> &params) {
 
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
-            // calculate the distance from the center of the circle
             Vector2 pixel_center = Vector2{x + Real(0.5), y + Real(0.5)};
-            Real distance = length(pixel_center - center);
 
-            // if the distance is less than the radius, the pixel is inside the circle
-            if (distance < radius) {
+            Circle circle_info = {center, radius, color, 1.0, Matrix3x3()}; // dummy values for the missing Circle fields
+
+            if (is_inside_circle(pixel_center, circle_info)) {
                 img(x, y) = color;
             } else {
                 img(x, y) = background_color;
@@ -78,8 +115,8 @@ Image3 hw_1_2(const std::vector<std::string> &params) {
         for (int y = y_start; y <= y_end; y++) {
             for (int x = x_start; x <= x_end; x++) {
                 Vector2 pixel_center = Vector2{x + Real(0.5), y + Real(0.5)};
-                Real distance = length(pixel_center - circle.center);
-                if (distance < circle.radius) {
+
+                if (is_inside_circle(pixel_center, circle)) {
                     img(x, y) = circle.color;
                 }
             }
@@ -88,8 +125,11 @@ Image3 hw_1_2(const std::vector<std::string> &params) {
     return img;
 }
 
+
+
+
+
 Image3 hw_1_3(const std::vector<std::string> &params) {
-    // Homework 1.3: render multiple shapes
     if (params.size() == 0) {
         return Image3(0, 0);
     }
@@ -101,11 +141,33 @@ Image3 hw_1_3(const std::vector<std::string> &params) {
 
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
-            img(x, y) = Vector3{1, 1, 1};
+            Vector2 pixel_point(x + Real(0.5), y + Real(0.5));
+            Vector3 pixel_color = scene.background;
+
+            for (const auto& shape : scene.shapes) {
+                if (auto *circle = std::get_if<Circle>(&shape)) {
+                    if (is_inside_circle(pixel_point, *circle)) {
+                        pixel_color = circle->color;
+                    }
+                } else if (auto *rectangle = std::get_if<Rectangle>(&shape)) {
+                    if (is_inside_rectangle(pixel_point, *rectangle)) {
+                        pixel_color = rectangle->color;
+                    }
+                } else if (auto *triangle = std::get_if<Triangle>(&shape)) {
+                    if (is_inside_triangle(pixel_point, *triangle)) {
+                        pixel_color = triangle->color;
+                    }
+                }
+            }
+            img(x, y) = pixel_color;
         }
     }
+
     return img;
 }
+
+
+
 
 Image3 hw_1_4(const std::vector<std::string> &params) {
     // Homework 1.4: render transformed shapes
