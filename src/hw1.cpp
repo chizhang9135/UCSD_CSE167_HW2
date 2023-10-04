@@ -18,26 +18,23 @@ bool is_inside_rectangle(const Vector2 &point, const Rectangle &rectangle) {
 }
 
 bool is_inside_triangle(const Vector2 &point, const Triangle &triangle) {
-    Vector2 edges[3] = {
-            triangle.p1 - triangle.p0,
-            triangle.p2 - triangle.p1,
-            triangle.p0 - triangle.p2
-    };
+    // Compute the edge vectors of the triangle
+    Vector2 e01 = triangle.p1 - triangle.p0;
+    Vector2 e12 = triangle.p2 - triangle.p1;
+    Vector2 e20 = triangle.p0 - triangle.p2;
 
-    Vector2 normals[3] = {
-            {-edges[0].y, edges[0].x},
-            {-edges[1].y, edges[1].x},
-            {-edges[2].y, edges[2].x}
-    };
+    // Rotate each edge vector by 90 degrees to obtain the normal vectors
+    Vector2 n01(e01.y, -e01.x);
+    Vector2 n12(e12.y, -e12.x);
+    Vector2 n20(e20.y, -e20.x);
 
-    for (int i = 0; i < 3; i++) {
-        Vector2 v = point - (i == 0 ? triangle.p0 : (i == 1 ? triangle.p1 : triangle.p2));
-        if (v.x * normals[i].x + v.y * normals[i].y < 0) {
-            return false;  // Point is outside this edge
-        }
-    }
+    // Compute dot products
+    float d1 = dot(point - triangle.p0, n01);
+    float d2 = dot(point - triangle.p1, n12);
+    float d3 = dot(point - triangle.p2, n20);
 
-    return true;
+    // Check if the point lies in the intersection of all positive or all negative half-planes
+    return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
 }
 
 
@@ -190,7 +187,6 @@ Image3 hw_1_4(const std::vector<std::string> &params) {
 
 
 Image3 hw_1_5(const std::vector<std::string> &params) {
-    // Homework 1.5: antialiasing
     if (params.size() == 0) {
         return Image3(0, 0);
     }
@@ -198,15 +194,57 @@ Image3 hw_1_5(const std::vector<std::string> &params) {
     Scene scene = parse_scene(params[0]);
     std::cout << scene << std::endl;
 
-    Image3 img(scene.resolution.x, scene.resolution.y);
+    int samples = 4; // 4x4 sampling pattern
+    Image3 img(scene.resolution.x * samples, scene.resolution.y * samples);  // Upsample the image by 4x
 
-    for (int y = 0; y < img.height; y++) {
-        for (int x = 0; x < img.width; x++) {
-            img(x, y) = Vector3{1, 1, 1};
+    for (int base_y = 0; base_y < scene.resolution.y; base_y++) {
+        for (int base_x = 0; base_x < scene.resolution.x; base_x++) {
+
+            for (int sub_y = 0; sub_y < samples; sub_y++) {
+                for (int sub_x = 0; sub_x < samples; sub_x++) {
+
+                    int x = base_x * samples + sub_x;
+                    int y = base_y * samples + sub_y;
+
+                    Vector2 pixel_point(base_x + (sub_x + Real(0.5)) / samples,
+                                        base_y + (sub_y + Real(0.5)) / samples);
+
+                    bool set_color = false;
+
+                    for (const auto& shape : scene.shapes) {
+                        if (auto *circle = std::get_if<Circle>(&shape)) {
+                            if (is_inside_circle(pixel_point, *circle)) {
+                                img(x, y) = circle->color;
+                                set_color = true;
+                                break;
+                            }
+                        } else if (auto *rectangle = std::get_if<Rectangle>(&shape)) {
+                            if (is_inside_rectangle(pixel_point, *rectangle)) {
+                                img(x, y) = rectangle->color;
+                                set_color = true;
+                                break;
+                            }
+                        } else if (auto *triangle = std::get_if<Triangle>(&shape)) {
+                            if (is_inside_triangle(pixel_point, *triangle)) {
+                                img(x, y) = triangle->color;
+                                set_color = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!set_color) {
+                        img(x, y) = scene.background;
+                    }
+                }
+            }
         }
     }
     return img;
 }
+
+
+
 
 
 
