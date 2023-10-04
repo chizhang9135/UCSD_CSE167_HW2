@@ -36,7 +36,9 @@ build/
 
 *.pdf
 
-# Vscode related
+# Vscode related and clion related
 .vscode
 __pycache__/
 /cmake-build-debug/
+/.idea/
+
