@@ -267,7 +267,6 @@ Image3 hw_1_5(const std::vector<std::string> &params) {
 
 
 Image3 hw_1_6(const std::vector<std::string> &params) {
-    // Homework 1.6: alpha blending
     if (params.size() == 0) {
         return Image3(0, 0);
     }
@@ -276,44 +275,63 @@ Image3 hw_1_6(const std::vector<std::string> &params) {
     std::cout << scene << std::endl;
 
     Image3 img(scene.resolution.x, scene.resolution.y);
+    int samples = 4;  // 4x4 sampling pattern
 
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
-            Vector2 pixel_point{static_cast<Real>(x), static_cast<Real>(y)};
             Vector3 accumulated_color = scene.background;
-            Real accumulated_alpha = 1.0;
+            Real accumulated_alpha_main = 1.0;
 
-            for (const auto& shape : scene.shapes) {
-                Vector3 current_shape_color;
-                Real current_shape_alpha = 0.0;
+            // Anti-aliasing: sample each pixel multiple times
+            for (int i = 0; i < samples; i++) {
+                for (int j = 0; j < samples; j++) {
+                    Vector2 pixel_point(x + Real(i + 0.5) / samples, y + Real(j + 0.5) / samples);
+                    Real accumulated_alpha_sample = 1.0;
+                    Vector3 sample_color = scene.background;
 
-                if (auto *circle = std::get_if<Circle>(&shape)) {
-                    if (is_inside_circle(pixel_point, *circle)) {
-                        current_shape_color = circle->color;
-                        current_shape_alpha = circle->alpha;
+                    for (const auto& shape : scene.shapes) {
+                        Matrix3x3 shapeTransform = get_transform(shape);
+                        Matrix3x3 inverseTransform = inverse(shapeTransform);
+                        Vector3 transformedPoint3 = inverseTransform * Vector3{pixel_point.x, pixel_point.y, 1.0};
+                        Vector2 transformedPoint = Vector2{transformedPoint3.x, transformedPoint3.y};
+
+                        Vector3 current_shape_color;
+                        Real current_shape_alpha = 0.0;
+
+                        if (auto *circle = std::get_if<Circle>(&shape)) {
+                            if (is_inside_circle(transformedPoint, *circle)) {
+                                current_shape_color = circle->color;
+                                current_shape_alpha = circle->alpha;
+                            }
+                        } else if (auto *rectangle = std::get_if<Rectangle>(&shape)) {
+                            if (is_inside_rectangle(transformedPoint, *rectangle)) {
+                                current_shape_color = rectangle->color;
+                                current_shape_alpha = rectangle->alpha;
+                            }
+                        } else if (auto *triangle = std::get_if<Triangle>(&shape)) {
+                            if (is_inside_triangle(transformedPoint, *triangle)) {
+                                current_shape_color = triangle->color;
+                                current_shape_alpha = triangle->alpha;
+                            }
+                        }
+
+                        // Alpha blending for this sample
+                        sample_color = current_shape_alpha * current_shape_color + (1 - current_shape_alpha) * sample_color;
+                        accumulated_alpha_sample *= (1 - current_shape_alpha);
                     }
-                } else if (auto *rectangle = std::get_if<Rectangle>(&shape)) {
-                    if (is_inside_rectangle(pixel_point, *rectangle)) {
-                        current_shape_color = rectangle->color;
-                        current_shape_alpha = rectangle->alpha;
-                    }
-                } else if (auto *triangle = std::get_if<Triangle>(&shape)) {
-                    if (is_inside_triangle(pixel_point, *triangle)) {
-                        current_shape_color = triangle->color;
-                        current_shape_alpha = triangle->alpha;
-                    }
+
+                    accumulated_color += sample_color;
                 }
-
-                accumulated_color = current_shape_alpha * current_shape_color + (1 - current_shape_alpha) * accumulated_color;
-                accumulated_alpha *= (1 - current_shape_alpha);
             }
 
+            accumulated_color /= Real(samples * samples); // Average the color for anti-aliasing
             img(x, y) = accumulated_color;
         }
     }
 
     return img;
 }
+
 
 
 
