@@ -2,9 +2,6 @@
 #include "hw1_scenes.h"
 
 using namespace hw1;
-// TODO: office hours question: < or <= for determining whether a pixel is inside a shape
-// TODO: office hours question: the gray on my end is not the same as the gray on the pdf
-
 
 // Helper functions to check whether a pixel is inside a shape
 bool is_inside_circle(const Vector2 &point, const Circle &circle) {
@@ -181,7 +178,33 @@ Image3 hw_1_4(const std::vector<std::string> &params) {
 
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
-            img(x, y) = Vector3{1, 1, 1};
+            Vector2 pixel_point(x + Real(0.5), y + Real(0.5));
+            Vector3 pixel_color = scene.background;
+
+            for (const auto& shape : scene.shapes) {
+                Matrix3x3 shapeTransform = get_transform(shape);
+                Matrix3x3 inverseTransform = inverse(shapeTransform);
+
+                //get Vector3 first than convert to Vector2
+                Vector3 transformedPoint3 = inverseTransform * Vector3{pixel_point.x, pixel_point.y, 1.0};
+                Vector2 transformedPoint = Vector2{transformedPoint3.x, transformedPoint3.y};
+
+                if (auto *circle = std::get_if<Circle>(&shape)) {
+                    if (is_inside_circle(transformedPoint, *circle)) {
+                        pixel_color = circle->color;
+                    }
+                } else if (auto *rectangle = std::get_if<Rectangle>(&shape)) {
+                    if (is_inside_rectangle(transformedPoint, *rectangle)) {
+                        pixel_color = rectangle->color;
+                    }
+                } else if (auto *triangle = std::get_if<Triangle>(&shape)) {
+                    if (is_inside_triangle(transformedPoint, *triangle)) {
+                        pixel_color = triangle->color;
+                    }
+                }
+            }
+
+            img(x, y) = pixel_color;
         }
     }
     return img;
@@ -210,16 +233,23 @@ Image3 hw_1_5(const std::vector<std::string> &params) {
                     Vector3 pixel_color = scene.background;
 
                     for (const auto& shape : scene.shapes) {
+                        Matrix3x3 shapeTransform = get_transform(shape);
+                        Matrix3x3 inverseTransform = inverse(shapeTransform);
+
+                        //get Vector3 first than convert to Vector2
+                        Vector3 transformedPoint3 = inverseTransform * Vector3{pixel_point.x, pixel_point.y, 1.0};
+                        Vector2 transformedPoint = Vector2{transformedPoint3.x, transformedPoint3.y};
+
                         if (auto *circle = std::get_if<Circle>(&shape)) {
-                            if (is_inside_circle(pixel_point, *circle)) {
+                            if (is_inside_circle(transformedPoint, *circle)) {
                                 pixel_color = circle->color;
                             }
                         } else if (auto *rectangle = std::get_if<Rectangle>(&shape)) {
-                            if (is_inside_rectangle(pixel_point, *rectangle)) {
+                            if (is_inside_rectangle(transformedPoint, *rectangle)) {
                                 pixel_color = rectangle->color;
                             }
                         } else if (auto *triangle = std::get_if<Triangle>(&shape)) {
-                            if (is_inside_triangle(pixel_point, *triangle)) {
+                            if (is_inside_triangle(transformedPoint, *triangle)) {
                                 pixel_color = triangle->color;
                             }
                         }
