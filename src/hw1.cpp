@@ -165,8 +165,6 @@ Image3 hw_1_3(const std::vector<std::string> &params) {
 
 
 
-
-
 Image3 hw_1_4(const std::vector<std::string> &params) {
     // Homework 1.4: render transformed shapes
     if (params.size() == 0) {
