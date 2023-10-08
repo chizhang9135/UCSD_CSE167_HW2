@@ -1,6 +1,8 @@
 #include "hw1.h"
 #include "hw1_scenes.h"
 
+//TODO Ask 1.6 need support anti-aliasing and transform or not?
+
 using namespace hw1;
 
 // Helper functions to check whether a pixel is inside a shape
