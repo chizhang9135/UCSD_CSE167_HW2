@@ -4,7 +4,7 @@
 using namespace hw1;
 // TODO: office hours question: < or <= for determining whether a pixel is inside a shape
 // TODO: office hours question: the gray on my end is not the same as the gray on the pdf
-// TODO: office hours question: for hw1_1, do we allow to make Circle objects so that we can use the helper functions?
+
 
 // Helper functions to check whether a pixel is inside a shape
 bool is_inside_circle(const Vector2 &point, const Circle &circle) {
@@ -67,11 +67,12 @@ Image3 hw_1_1(const std::vector<std::string> &params) {
 
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
+            // calculate the distance from the center of the circle
             Vector2 pixel_center = Vector2{x + Real(0.5), y + Real(0.5)};
+            Real distance = length(pixel_center - center);
 
-            Circle circle_info = {center, radius, color, 1.0, Matrix3x3()}; // dummy values for the missing Circle fields
-
-            if (is_inside_circle(pixel_center, circle_info)) {
+            // if the distance is less than the radius, the pixel is inside the circle
+            if (distance < radius) {
                 img(x, y) = color;
             } else {
                 img(x, y) = background_color;
@@ -165,6 +166,8 @@ Image3 hw_1_3(const std::vector<std::string> &params) {
 
 
 
+
+
 Image3 hw_1_4(const std::vector<std::string> &params) {
     // Homework 1.4: render transformed shapes
     if (params.size() == 0) {
@@ -247,7 +250,8 @@ Image3 hw_1_6(const std::vector<std::string> &params) {
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
             Vector2 pixel_point{static_cast<Real>(x), static_cast<Real>(y)};
-            Vector3 pixel_color = scene.background; // start with background color
+            Vector3 accumulated_color = scene.background;
+            Real accumulated_alpha = 1.0;
 
             for (const auto& shape : scene.shapes) {
                 Vector3 current_shape_color;
@@ -270,14 +274,16 @@ Image3 hw_1_6(const std::vector<std::string> &params) {
                     }
                 }
 
-                // Blend this shape's color with the current pixel color
-                pixel_color = current_shape_alpha * current_shape_color + (1 - current_shape_alpha) * pixel_color;
+                accumulated_color = current_shape_alpha * current_shape_color + (1 - current_shape_alpha) * accumulated_color;
+                accumulated_alpha *= (1 - current_shape_alpha);
             }
 
-            img(x, y) = pixel_color;
+            img(x, y) = accumulated_color;
         }
     }
 
     return img;
 }
+
+
 
