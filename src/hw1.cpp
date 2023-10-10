@@ -111,8 +111,8 @@ Image3 hw_1_2(const std::vector<std::string> &params) {
         int y_start = std::max(0, static_cast<int>(bounding_box_min.y));
         int y_end = std::min(img.height, static_cast<int>(bounding_box_max.y));
 
-        for (int y = y_start; y <= y_end; y++) {
-            for (int x = x_start; x <= x_end; x++) {
+        for (int y = y_start; y < y_end; y++) {
+            for (int x = x_start; x < x_end; x++) {
                 Vector2 pixel_center = Vector2{x + Real(0.5), y + Real(0.5)};
 
                 if (is_inside_circle(pixel_center, circle)) {
