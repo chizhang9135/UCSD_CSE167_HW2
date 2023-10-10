@@ -8,9 +8,32 @@
 int main(int argc, char *argv[]) {
     std::vector<std::string> parameters;
     std::string hw_num;
+
     for (int i = 1; i < argc; ++i) {
         if (std::string(argv[i]) == "-hw") {
             hw_num = std::string(argv[++i]);
+        } else if (std::string(argv[i]) == "-animation") {
+            std::string dir_path = std::string(argv[++i]);
+            std::filesystem::path input_path(dir_path);
+            std::string output_dir = "out_" + input_path.filename().string();
+
+// Check and create output directory
+            if (!std::filesystem::exists(output_dir)) {
+                std::filesystem::create_directory(output_dir);
+            }
+
+
+            // Iterate through all JSON files
+            for (const auto &entry : std::filesystem::directory_iterator(dir_path)) {
+                if (entry.path().extension() == ".json") {
+                    parameters.clear();
+                    parameters.push_back(entry.path().string());
+                    Image3 img = hw_1_4(parameters);
+                    std::filesystem::path output_path = output_dir / entry.path().filename();
+                    imwrite(output_path.replace_extension(".png").string(), img);
+                }
+            }
+            return 0;
         } else {
             parameters.push_back(std::string(argv[i]));
         }

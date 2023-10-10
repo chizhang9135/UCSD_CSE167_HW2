@@ -1,0 +1,316 @@
+{
+    "resolution": [
+        512,
+        512
+    ],
+    "background": [
+        0.5,
+        0.5,
+        0.5
+    ],
+    "objects": [
+        {
+            "type": "circle",
+            "color": [
+                0.8,
+                0.8,
+                0.2
+            ],
+            "transform": [
+                {
+                    "scale": [
+                        65,
+                        65
+                    ]
+                },
+                {
+                    "translate": [
+                        65,
+                        65
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "rectangle",
+            "color": [
+                0.8,
+                0.8,
+                0.2
+            ],
+            "transform": [
+                {
+                    "scale": [
+                        26,
+                        65
+                    ]
+                },
+                {
+                    "translate": [
+                        65,
+                        60
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "rectangle",
+            "color": [
+                0.8,
+                0.8,
+                0.2
+            ],
+            "transform": [
+                {
+                    "scale": [
+                        26,
+                        65
+                    ]
+                },
+                {
+                    "translate": [
+                        65,
+                        60
+                    ]
+                },
+                {
+                    "translate": [
+                        -65,
+                        -65
+                    ]
+                },
+                {
+                    "rotate": 45
+                },
+                {
+                    "translate": [
+                        65,
+                        65
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "rectangle",
+            "color": [
+                0.8,
+                0.8,
+                0.2
+            ],
+            "transform": [
+                {
+                    "scale": [
+                        26,
+                        65
+                    ]
+                },
+                {
+                    "translate": [
+                        65,
+                        60
+                    ]
+                },
+                {
+                    "translate": [
+                        -65,
+                        -65
+                    ]
+                },
+                {
+                    "rotate": 65
+                },
+                {
+                    "translate": [
+                        65,
+                        65
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "rectangle",
+            "color": [
+                0.8,
+                0.8,
+                0.2
+            ],
+            "transform": [
+                {
+                    "scale": [
+                        26,
+                        65
+                    ]
+                },
+                {
+                    "translate": [
+                        65,
+                        60
+                    ]
+                },
+                {
+                    "translate": [
+                        -65,
+                        -65
+                    ]
+                },
+                {
+                    "rotate": 65
+                },
+                {
+                    "translate": [
+                        65,
+                        65
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "rectangle",
+            "color": [
+                0.8,
+                0.8,
+                0.2
+            ],
+            "transform": [
+                {
+                    "scale": [
+                        26,
+                        65
+                    ]
+                },
+                {
+                    "translate": [
+                        65,
+                        60
+                    ]
+                },
+                {
+                    "translate": [
+                        -65,
+                        -65
+                    ]
+                },
+                {
+                    "rotate": 65
+                },
+                {
+                    "translate": [
+                        65,
+                        65
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "rectangle",
+            "color": [
+                0.8,
+                0.8,
+                0.2
+            ],
+            "transform": [
+                {
+                    "scale": [
+                        26,
+                        65
+                    ]
+                },
+                {
+                    "translate": [
+                        65,
+                        60
+                    ]
+                },
+                {
+                    "translate": [
+                        -65,
+                        -65
+                    ]
+                },
+                {
+                    "rotate": 65
+                },
+                {
+                    "translate": [
+                        65,
+                        65
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "rectangle",
+            "color": [
+                0.8,
+                0.8,
+                0.2
+            ],
+            "transform": [
+                {
+                    "scale": [
+                        26,
+                        65
+                    ]
+                },
+                {
+                    "translate": [
+                        65,
+                        60
+                    ]
+                },
+                {
+                    "translate": [
+                        -65,
+                        -65
+                    ]
+                },
+                {
+                    "rotate": 65
+                },
+                {
+                    "translate": [
+                        65,
+                        65
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "rectangle",
+            "color": [
+                0.8,
+                0.8,
+                0.2
+            ],
+            "transform": [
+                {
+                    "scale": [
+                        26,
+                        65
+                    ]
+                },
+                {
+                    "translate": [
+                        65,
+                        60
+                    ]
+                },
+                {
+                    "translate": [
+                        -65,
+                        -65
+                    ]
+                },
+                {
+                    "rotate": 65
+                },
+                {
+                    "translate": [
+                        65,
+                        65
+                    ]
+                }
+            ]
+        }
+    ]
+}
