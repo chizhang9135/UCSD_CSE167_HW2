@@ -1,13 +1,22 @@
 # This is HW1 for CSE 167
 
-## This branch is intended for generate animation for transformation
+## All normal part work as write up
 
-### How to run
-1. `cd` to the directory of this project
-2. using tool to cmake
-3. create a dir with the json file you want to run
-4. run the python jsonGen.py to generate a set of json files
-5. run ./balboa with -animation flag and the json file dir you want to run
-   - e.g. `./balboa -animation ../sun
-6. I use ffmpeg to make video
+## implement 1-2 1-4 extra credit (line and curve not yet)
 
+### How to run 
+1. build with cmake as debug (using any toolchain, I love CLion
+2. using `cd` to change directory to `cmake-build-debug`
+3. for all normal part, run the code as write up
+4. for 1-2 boxing extra credit, it is already implemented in the code
+5. prep for 1-4 extra credit, run the python script jsonGen.py as instructed in my comment, to make you easy, I have already generated the json files under `/sun` `/piggy` `/transformation_2`
+6. for 1-4 line and curve extra credit, run the code with `.balboa -animation dir"
+   - e.g. `./balboa -animation ../sun`
+   - e.g. `./balboa -animation ../piggy`
+   - etc
+7. etc
+
+### How to find already generated output
+1. for the normal and 1-2 extra credit, the output is under `/output` directory
+2. for the 1-4 extra credit, the output is under `/output/animation` directory
+3. for the 1-4 source img out, the output is under `/cmake-build-debug` directory with `prefix out_[name]`
