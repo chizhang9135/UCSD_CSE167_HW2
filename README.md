@@ -14,9 +14,11 @@
    - e.g. `./balboa -animation ../sun`
    - e.g. `./balboa -animation ../piggy`
    - etc
-7. etc
+
 
 ### How to find already generated output
 1. for the normal and 1-2 extra credit, the output is under `/output` directory
 2. for the 1-4 extra credit, the output is under `/output/animation` directory
 3. for the 1-4 source img out, the output is under `/cmake-build-debug` directory with `prefix out_[name]`
+
+
