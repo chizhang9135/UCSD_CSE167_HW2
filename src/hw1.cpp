@@ -332,6 +332,11 @@ Image3 hw_1_6(const std::vector<std::string> &params) {
     return img;
 }
 
+// Image3 hw_1_7(const std::vector<std::string> &params) is dummy function directly call hw_1_6
+Image3 hw_1_7(const std::vector<std::string> &params) {
+    return hw_1_6(params);
+}
+
 
 
 

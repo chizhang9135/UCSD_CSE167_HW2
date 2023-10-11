@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
         Image3 img = hw_1_6(parameters);
         imwrite("hw_1_6.png", img);
     } else if (hw_num == "1_7") {
-        Image3 img = hw_1_6(parameters);
+        Image3 img = hw_1_7(parameters);
         imwrite("hw_1_7.png", img);
     } else if (hw_num == "2_1") {
         Image3 img = hw_2_1(parameters);
