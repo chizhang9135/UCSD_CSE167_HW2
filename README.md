@@ -6,7 +6,7 @@
 
 ### How to run 
 1. build with cmake as debug (using any toolchain, I love CLion
-2. using `cd` to change directory to `cmake-build-debug`
+2. using `cd` to change directory to `cmake-build-debug` (or any other build directory if you are using other toolchain)
 3. for all normal part, run the code as write up
 4. for 1-2 boxing extra credit, it is already implemented in the code
 5. prep for 1-4 extra credit, run the python script jsonGen.py as instructed in my comment, to make you easy, I have already generated the json files under `/sun` `/piggy` `/transformation_2`
