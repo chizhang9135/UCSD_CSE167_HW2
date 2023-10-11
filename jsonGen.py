@@ -1,11 +1,14 @@
 import json
 import copy
+import os
+
 
 def generate_interpolated_jsons(filename):
     with open(filename, 'r') as f:
         data = json.load(f)
 
-    OFFSET = 5
+    # get user desired offset
+    OFFSET = int(input("Enter offset: "))
     max_steps = 0
 
     # Determine the maximum steps required for all transformations
@@ -47,4 +50,10 @@ def generate_interpolated_jsons(filename):
 
 
 if __name__ == "__main__":
-    generate_interpolated_jsons("dir/file.json")
+    # get user input file name under a directory
+    print("create a directory and put your json file in it")
+    fileName = input("Enter file name as format dir/file.json: ")
+    generate_interpolated_jsons(fileName)
+    # remove the original file from previous step
+    os.remove(fileName)
+
