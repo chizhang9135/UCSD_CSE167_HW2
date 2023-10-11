@@ -14,7 +14,7 @@
    - e.g. `./balboa -animation ../sun`
    - e.g. `./balboa -animation ../piggy`
    - etc
-
+7. for 1-7, my own scene is under `/scene` directory, as `hw_1_7.json`. The generated image is under `output` directory as `hw_1_7.png` 
 
 ### How to find already generated output
 1. for the normal and 1-2 extra credit, the output is under `/output` directory
