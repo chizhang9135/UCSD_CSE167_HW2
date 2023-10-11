@@ -1,7 +1,6 @@
 #include "hw1.h"
 #include "hw1_scenes.h"
 
-//TODO Ask 1.6 need support anti-aliasing and transform or not?
 
 using namespace hw1;
 
@@ -331,6 +330,7 @@ Image3 hw_1_6(const std::vector<std::string> &params) {
 
     return img;
 }
+
 
 // Image3 hw_1_7(const std::vector<std::string> &params) is dummy function directly call hw_1_6
 Image3 hw_1_7(const std::vector<std::string> &params) {
