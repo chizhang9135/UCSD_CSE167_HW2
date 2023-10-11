@@ -14,7 +14,10 @@
    - e.g. `./balboa -animation ../sun`
    - e.g. `./balboa -animation ../piggy`
    - etc
-7. for 1-7, my own scene is under `/scene` directory, as `hw_1_7.json`. The generated image is under `output` directory as `hw_1_7.png` 
+7. for 1-7, my own scene is under `scenes/hw1/hw_1_7.json` directory, as `hw_1_7.json`. The generated image is under `output` directory as `hw_1_7.png`. If you want to run yourself, using the command:
+```shell
+./balboa -hw 1_7 ../scenes/hw1/hw_1_7.json
+```
 
 ### How to find already generated output
 1. for the normal and 1-2 extra credit, the output is under `/output` directory
