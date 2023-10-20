@@ -3,6 +3,27 @@
 
 using namespace hw2;
 
+bool is_inside_triangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p) {
+    // Compute the edge vectors of the triangle
+    Vector2 e01 = p1 - p0;
+    Vector2 e12 = p2 - p1;
+    Vector2 e20 = p0 - p2;
+
+    // Rotate each edge vector by 90 degrees to obtain the normal vectors
+    Vector2 n01(e01.y, -e01.x);
+    Vector2 n12(e12.y, -e12.x);
+    Vector2 n20(e20.y, -e20.x);
+
+    // Compute dot products
+    float d1 = dot(p - p0, n01);
+    float d2 = dot(p - p1, n12);
+    float d3 = dot(p - p2, n20);
+
+    // Check if the point lies in the intersection of all positive or all negative half-planes
+    return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
+}
+
+
 Image3 hw_2_1(const std::vector<std::string> &params) {
     // Homework 2.1: render a single 3D triangle
 
@@ -39,9 +60,38 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
         }
     }
 
+    auto project = [](const Vector3 &p) -> Vector2 {
+        return { -p.x / p.z, -p.y / p.z };
+    };
+
+    // Function to transform the projected point to screen space
+    auto toScreenSpace = [&](const Vector2 &p) -> Vector2 {
+        float w = img.width;
+        float h = img.height;
+        float aspect_ratio = w / h;
+
+        return { w * (p.x + aspect_ratio * s) / (2 * aspect_ratio * s),
+                 h * (1 - (p.y + s) / (2 * s)) };  // y-axis is flipped
+    };
+
+    // Project the 3D triangle vertices to 2D
+    Vector2 p0_projected = project(p0);
+    Vector2 p1_projected = project(p1);
+    Vector2 p2_projected = project(p2);
+
+    // Convert the projected vertices to screen space
+    Vector2 p0_screen = toScreenSpace(p0_projected);
+    Vector2 p1_screen = toScreenSpace(p1_projected);
+    Vector2 p2_screen = toScreenSpace(p2_projected);
+
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
-            img(x, y) = Vector3{1, 1, 1};
+                img(x, y) = Vector3{0.5, 0.5, 0.5};
+                // Check if the pixel is inside the triangle
+                if (is_inside_triangle(p0_screen, p1_screen, p2_screen, {x, y})) {
+                    img(x, y) = color;
+                }
+
         }
     }
     return img;
