@@ -3,6 +3,14 @@
 
 using namespace hw2;
 
+/**
+ * This function checks if a point is inside a triangle.
+ * @param p0 point 0 of the triangle
+ * @param p1 point 1 of the triangle
+ * @param p2 point 2 of the triangle
+ * @param p point to be checked
+ * @return true if the point is inside the triangle, false otherwise
+ */
 bool is_inside_triangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p) {
     // Compute the edge vectors of the triangle
     Vector2 e01 = p1 - p0;
@@ -23,6 +31,29 @@ bool is_inside_triangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p) {
     return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
 }
 
+/**
+ * This function projects a 3D point to 2D.
+ * @param p 3D point to be projected
+ * @return 2D point after projection
+ */
+Vector2 project(const Vector3 &p) {
+    return { -p.x / p.z, -p.y / p.z };
+}
+
+/**
+ * This function converts a point from normalized device coordinates to screen space.
+ * @param p The point in normalized device coordinates
+ * @param width The width of the screen
+ * @param height The height of the screen
+ * @param s The scaling factor of the view frustum
+ * @return The point in screen space
+ */
+Vector2 toScreenSpace(const Vector2 &p, int width, int height, Real s) {
+    float aspect_ratio = static_cast<float>(width) / height;
+
+    return { width * (p.x + aspect_ratio * s) / (2 * aspect_ratio * s),
+             height * (1 - (p.y + s) / (2 * s)) };  // y-axis is flipped
+}
 
 Image3 hw_2_1(const std::vector<std::string> &params) {
     // Homework 2.1: render a single 3D triangle
@@ -60,19 +91,6 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
         }
     }
 
-    auto project = [](const Vector3 &p) -> Vector2 {
-        return { -p.x / p.z, -p.y / p.z };
-    };
-
-    // Function to transform the projected point to screen space
-    auto toScreenSpace = [&](const Vector2 &p) -> Vector2 {
-        float w = img.width;
-        float h = img.height;
-        float aspect_ratio = w / h;
-
-        return { w * (p.x + aspect_ratio * s) / (2 * aspect_ratio * s),
-                 h * (1 - (p.y + s) / (2 * s)) };  // y-axis is flipped
-    };
 
     // Project the 3D triangle vertices to 2D
     Vector2 p0_projected = project(p0);
@@ -80,18 +98,33 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
     Vector2 p2_projected = project(p2);
 
     // Convert the projected vertices to screen space
-    Vector2 p0_screen = toScreenSpace(p0_projected);
-    Vector2 p1_screen = toScreenSpace(p1_projected);
-    Vector2 p2_screen = toScreenSpace(p2_projected);
+    Vector2 p0_screen = toScreenSpace(p0_projected, img.width, img.height, s);
+    Vector2 p1_screen = toScreenSpace(p1_projected, img.width, img.height, s);
+    Vector2 p2_screen = toScreenSpace(p2_projected, img.width, img.height, s);
+
+    const int samples = 4;
 
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
-                img(x, y) = Vector3{0.5, 0.5, 0.5};
-                // Check if the pixel is inside the triangle
-                if (is_inside_triangle(p0_screen, p1_screen, p2_screen, {x, y})) {
-                    img(x, y) = color;
-                }
+            Vector3 accumulated_color{0, 0, 0}; // Accumulator for the samples
 
+            for (int i = 0; i < samples; i++) {
+                for (int j = 0; j < samples; j++) {
+                    // Calculate the sample's position
+                    float sample_x = x + float(i + 0.5) / samples;
+                    float sample_y = y + float(j + 0.5) / samples;
+
+                    // Check if this sample is inside the triangle
+                    if (is_inside_triangle(p0_screen, p1_screen, p2_screen, {sample_x, sample_y})) {
+                        accumulated_color += color;
+                    } else {
+                        accumulated_color += Vector3{0.5, 0.5, 0.5}; // Default color
+                    }
+                }
+            }
+
+            // Average the samples and assign to pixel
+            img(x, y) = accumulated_color / Real(samples * samples);
         }
     }
     return img;
