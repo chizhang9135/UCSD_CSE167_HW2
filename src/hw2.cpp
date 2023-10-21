@@ -169,7 +169,6 @@ Image3 hw_2_2(const std::vector<std::string> &params) {
     }
 
     TriangleMesh mesh = meshes[scene_id];
-    UNUSED(mesh); // silence warning, feel free to remove this
 
     for (int y = 0; y < SUPER_HEIGHT; y++) {
         for (int x = 0; x < SUPER_WIDTH; x++) {
