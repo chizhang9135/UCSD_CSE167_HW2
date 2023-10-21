@@ -55,6 +55,21 @@ Vector2 toScreenSpace(const Vector2 &p, int width, int height, Real s) {
              height * (1 - (p.y + s) / (2 * s)) };  // y-axis is flipped
 }
 
+Vector3 barycentric_coordinates(const Vector2 &A, const Vector2 &B, const Vector2 &C, const Vector2 &P) {
+    Real denom = (B.y - C.y) * (A.x - C.x) + (C.x - B.x) * (A.y - C.y);
+    if (std::abs(denom) < 1e-6) {
+        // Triangle is degenerate, return invalid barycentric coordinates
+        return Vector3{-1, -1, -1};
+    }
+
+    Real b0 = ((B.y - C.y) * (P.x - C.x) + (C.x - B.x) * (P.y - C.y)) / denom;
+    Real b1 = ((C.y - A.y) * (P.x - C.x) + (A.x - C.x) * (P.y - C.y)) / denom;
+    Real b2 = 1.0 - b0 - b1;
+
+    return Vector3{b0, b1, b2};
+}
+
+
 Image3 hw_2_1(const std::vector<std::string> &params) {
     // Homework 2.1: render a single 3D triangle
 
@@ -210,9 +225,14 @@ Image3 hw_2_2(const std::vector<std::string> &params) {
 }
 
 Image3 hw_2_3(const std::vector<std::string> &params) {
-    // Homework 2.3: render a triangle mesh with vertex colors
+    // Homework 2.3: render a triangle mesh with interpolated vertex colors and super-sampling
 
-    Image3 img(640 /* width */, 480 /* height */);
+    const int AA_FACTOR = 4;
+    const int SUPER_WIDTH = 640 * AA_FACTOR;
+    const int SUPER_HEIGHT = 480 * AA_FACTOR;
+
+    Image3 superImg(SUPER_WIDTH, SUPER_HEIGHT);
+    Image3 img(640, 480);
 
     Real s = 1; // scaling factor of the view frustrum
     Real z_near = 1e-6; // distance of the near clipping plane
@@ -228,13 +248,62 @@ Image3 hw_2_3(const std::vector<std::string> &params) {
     }
 
     TriangleMesh mesh = meshes[scene_id];
-    UNUSED(mesh); // silence warning, feel free to remove this
 
-    for (int y = 0; y < img.height; y++) {
-        for (int x = 0; x < img.width; x++) {
-            img(x, y) = Vector3{1, 1, 1};
+    for (int y = 0; y < SUPER_HEIGHT; y++) {
+        for (int x = 0; x < SUPER_WIDTH; x++) {
+            superImg(x, y) = Vector3{0.5, 0.5, 0.5};
         }
     }
+
+    // Render each triangle with interpolated vertex colors
+    for (const auto &face : mesh.faces) {
+        Vector3 v0 = mesh.vertices[face[0]];
+        Vector3 v1 = mesh.vertices[face[1]];
+        Vector3 v2 = mesh.vertices[face[2]];
+
+        Vector3 color0 = mesh.vertex_colors[face[0]];
+        Vector3 color1 = mesh.vertex_colors[face[1]];
+        Vector3 color2 = mesh.vertex_colors[face[2]];
+
+        Vector2 projected_v0 = toScreenSpace(project(v0), SUPER_WIDTH, SUPER_HEIGHT, s);
+        Vector2 projected_v1 = toScreenSpace(project(v1), SUPER_WIDTH, SUPER_HEIGHT, s);
+        Vector2 projected_v2 = toScreenSpace(project(v2), SUPER_WIDTH, SUPER_HEIGHT, s);
+
+        int x_min = std::min({projected_v0.x, projected_v1.x, projected_v2.x});
+        int x_max = std::max({projected_v0.x, projected_v1.x, projected_v2.x});
+        int y_min = std::min({projected_v0.y, projected_v1.y, projected_v2.y});
+        int y_max = std::max({projected_v0.y, projected_v1.y, projected_v2.y});
+
+        // Clip against screen bounds
+        x_min = std::max(0, x_min);
+        y_min = std::max(0, y_min);
+        x_max = std::min(SUPER_WIDTH - 1, x_max);
+        y_max = std::min(SUPER_HEIGHT - 1, y_max);
+
+        for (int y = y_min; y <= y_max; y++) {
+            for (int x = x_min; x <= x_max; x++) {
+                if (is_inside_triangle(projected_v0, projected_v1, projected_v2, Vector2(x + 0.5, y + 0.5))) {
+                    Vector3 barycentric = barycentric_coordinates(projected_v0, projected_v1, projected_v2, Vector2(x + 0.5, y + 0.5));
+                    Vector3 interpolated_color = barycentric.x * color0 + barycentric.y * color1 + barycentric.z * color2;
+                    superImg(x, y) = interpolated_color;
+                }
+            }
+        }
+    }
+
+    // Downsampling
+    for (int y = 0; y < 480; y++) {
+        for (int x = 0; x < 640; x++) {
+            Vector3 sumColor = Vector3{0, 0, 0};
+            for (int dy = 0; dy < AA_FACTOR; dy++) {
+                for (int dx = 0; dx < AA_FACTOR; dx++) {
+                    sumColor += superImg(x * AA_FACTOR + dx, y * AA_FACTOR + dy);
+                }
+            }
+            img(x, y) = sumColor / Real(AA_FACTOR * AA_FACTOR);
+        }
+    }
+
     return img;
 }
 
