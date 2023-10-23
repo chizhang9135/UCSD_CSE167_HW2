@@ -3,7 +3,14 @@
 
 using namespace hw2;
 
-
+/**
+ * Check if a point is inside a triangle
+ * @param p0 The first vertex of the triangle
+ * @param p1 The second vertex of the triangle
+ * @param p2 The third vertex of the triangle
+ * @param p The point to be checked
+ * @return True if the point is inside the triangle, false otherwise
+ */
 bool is_inside_triangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p) {
     // Compute the edge vectors of the triangle
     Vector2 e01 = p1 - p0;
@@ -24,10 +31,23 @@ bool is_inside_triangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p) {
     return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
 }
 
+/**
+ * Project a 3D point to 2D
+ * @param p The 3D point to be projected
+ * @return The projected 2D point
+ */
 Vector2 project(const Vector3 &p) {
     return { -p.x / p.z, -p.y / p.z };
 }
 
+/**
+ * Convert a projected point to screen space
+ * @param p The projected point
+ * @param width The width of the screen
+ * @param height The height of the screen
+ * @param s The scaling factor of the view frustum
+ * @return The point in screen space
+ */
 Vector2 toScreenSpace(const Vector2 &p, int width, int height, Real s) {
     float aspect_ratio = static_cast<float>(width) / height;
 
@@ -35,6 +55,14 @@ Vector2 toScreenSpace(const Vector2 &p, int width, int height, Real s) {
              height * (1 - (p.y + s) / (2 * s)) };  // y-axis is flipped
 }
 
+/**
+ * Compute the barycentric coordinates of a point in a triangle
+ * @param A The first vertex of the triangle
+ * @param B The second vertex of the triangle
+ * @param C The third vertex of the triangle
+ * @param P The point to be checked
+ * @return The barycentric coordinates of the point
+ */
 Vector3 barycentric_coordinates(const Vector2 &A, const Vector2 &B, const Vector2 &C, const Vector2 &P) {
     Real denom = (B.y - C.y) * (A.x - C.x) + (C.x - B.x) * (A.y - C.y);
     if (std::abs(denom) < 1e-6) {
@@ -49,6 +77,25 @@ Vector3 barycentric_coordinates(const Vector2 &A, const Vector2 &B, const Vector
     return Vector3{b0, b1, b2};
 }
 
+/**
+ * Down-sample a super-sampled image
+ * @param img The down-sampled image
+ * @param superImg The super-sampled image
+ * @param AA_FACTOR The anti-aliasing factor
+ */
+void downsample(Image3& img, const Image3& superImg, int AA_FACTOR) {
+    for (int y = 0; y < img.height; y++) {
+        for (int x = 0; x < img.width; x++) {
+            Vector3 sumColor = Vector3{0, 0, 0};
+            for (int dy = 0; dy < AA_FACTOR; dy++) {
+                for (int dx = 0; dx < AA_FACTOR; dx++) {
+                    sumColor += superImg(x * AA_FACTOR + dx, y * AA_FACTOR + dy);
+                }
+            }
+            img(x, y) = sumColor / Real(AA_FACTOR * AA_FACTOR);
+        }
+    }
+}
 
 Image3 hw_2_1(const std::vector<std::string> &params) {
     // Homework 2.1: render a single 3D triangle
@@ -124,17 +171,7 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
     }
 
     // Downsampling
-    for (int y = 0; y < 480; y++) {
-        for (int x = 0; x < 640; x++) {
-            Vector3 sumColor = Vector3{0, 0, 0};
-            for (int dy = 0; dy < AA_FACTOR; dy++) {
-                for (int dx = 0; dx < AA_FACTOR; dx++) {
-                    sumColor += superImg(x * AA_FACTOR + dx, y * AA_FACTOR + dy);
-                }
-            }
-            img(x, y) = sumColor / Real(AA_FACTOR * AA_FACTOR);
-        }
-    }
+    downsample(img, superImg, AA_FACTOR);
 
     return img;
 }
@@ -213,20 +250,8 @@ Image3 hw_2_2(const std::vector<std::string> &params) {
         }
     }
 
-// Downsampling
-    for (int y = 0; y < 480; y++) {
-        for (int x = 0; x < 640; x++) {
-            Vector3 sumColor = Vector3{0, 0, 0};
-            for (int dy = 0; dy < AA_FACTOR; dy++) {
-                for (int dx = 0; dx < AA_FACTOR; dx++) {
-                    sumColor += superImg(x * AA_FACTOR + dx, y * AA_FACTOR + dy);
-                }
-            }
-            img(x, y) = sumColor / Real(AA_FACTOR * AA_FACTOR);
-        }
-    }
-
-
+    // Downsampling
+    downsample(img, superImg, AA_FACTOR);
     return img;
 }
 
@@ -312,17 +337,7 @@ Image3 hw_2_3(const std::vector<std::string> &params) {
     }
 
     // Downsampling
-    for (int y = 0; y < 480; y++) {
-        for (int x = 0; x < 640; x++) {
-            Vector3 sumColor = Vector3{0, 0, 0};
-            for (int dy = 0; dy < AA_FACTOR; dy++) {
-                for (int dx = 0; dx < AA_FACTOR; dx++) {
-                    sumColor += superImg(x * AA_FACTOR + dx, y * AA_FACTOR + dy);
-                }
-            }
-            img(x, y) = sumColor / Real(AA_FACTOR * AA_FACTOR);
-        }
-    }
+    downsample(img, superImg, AA_FACTOR);
 
     return img;
 }
