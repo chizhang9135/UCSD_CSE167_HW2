@@ -3,14 +3,7 @@
 
 using namespace hw2;
 
-/**
- * This function checks if a point is inside a triangle.
- * @param p0 point 0 of the triangle
- * @param p1 point 1 of the triangle
- * @param p2 point 2 of the triangle
- * @param p point to be checked
- * @return true if the point is inside the triangle, false otherwise
- */
+
 bool is_inside_triangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p) {
     // Compute the edge vectors of the triangle
     Vector2 e01 = p1 - p0;
@@ -31,23 +24,10 @@ bool is_inside_triangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p) {
     return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0);
 }
 
-/**
- * This function projects a 3D point to 2D.
- * @param p 3D point to be projected
- * @return 2D point after projection
- */
 Vector2 project(const Vector3 &p) {
     return { -p.x / p.z, -p.y / p.z };
 }
 
-/**
- * This function converts a point from normalized device coordinates to screen space.
- * @param p The point in normalized device coordinates
- * @param width The width of the screen
- * @param height The height of the screen
- * @param s The scaling factor of the view frustum
- * @return The point in screen space
- */
 Vector2 toScreenSpace(const Vector2 &p, int width, int height, Real s) {
     float aspect_ratio = static_cast<float>(width) / height;
 
@@ -74,6 +54,11 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
     // Homework 2.1: render a single 3D triangle
 
     Image3 img(640 /* width */, 480 /* height */);
+
+    const int AA_FACTOR = 4;
+    const int SUPER_WIDTH = 640 * AA_FACTOR;
+    const int SUPER_HEIGHT = 480 * AA_FACTOR;
+    Image3 superImg(SUPER_WIDTH, SUPER_HEIGHT);
 
     Vector3 p0{0, 0, -1};
     Vector3 p1{1, 0, -1};
@@ -106,42 +91,51 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
         }
     }
 
+    for (int y = 0; y < SUPER_HEIGHT; y++) {
+        for (int x = 0; x < SUPER_WIDTH; x++) {
+            superImg(x, y) = Vector3{0.5, 0.5, 0.5}; // Default background color
+        }
+    }
+
+
 
     // Project the 3D triangle vertices to 2D
     Vector2 p0_projected = project(p0);
     Vector2 p1_projected = project(p1);
     Vector2 p2_projected = project(p2);
 
-    // Convert the projected vertices to screen space
-    Vector2 p0_screen = toScreenSpace(p0_projected, img.width, img.height, s);
-    Vector2 p1_screen = toScreenSpace(p1_projected, img.width, img.height, s);
-    Vector2 p2_screen = toScreenSpace(p2_projected, img.width, img.height, s);
+    // Convert the projected vertices to super-sampled screen space
+    Vector2 p0_screen = toScreenSpace(p0_projected, SUPER_WIDTH, SUPER_HEIGHT, s);
+    Vector2 p1_screen = toScreenSpace(p1_projected, SUPER_WIDTH, SUPER_HEIGHT, s);
+    Vector2 p2_screen = toScreenSpace(p2_projected, SUPER_WIDTH, SUPER_HEIGHT, s);
 
-    const int samples = 4;
+    // bounding box for fast rendering
+    int x_min = std::max(0, static_cast<int>(std::min({p0_screen.x, p1_screen.x, p2_screen.x})));
+    int x_max = std::min(SUPER_WIDTH - 1, static_cast<int>(std::max({p0_screen.x, p1_screen.x, p2_screen.x})));
+    int y_min = std::max(0, static_cast<int>(std::min({p0_screen.y, p1_screen.y, p2_screen.y})));
+    int y_max = std::min(SUPER_HEIGHT - 1, static_cast<int>(std::max({p0_screen.y, p1_screen.y, p2_screen.y})));
 
-    for (int y = 0; y < img.height; y++) {
-        for (int x = 0; x < img.width; x++) {
-            Vector3 accumulated_color{0, 0, 0}; // Accumulator for the samples
-
-            for (int i = 0; i < samples; i++) {
-                for (int j = 0; j < samples; j++) {
-                    // Calculate the sample's position
-                    float sample_x = x + float(i + 0.5) / samples;
-                    float sample_y = y + float(j + 0.5) / samples;
-
-                    // Check if this sample is inside the triangle
-                    if (is_inside_triangle(p0_screen, p1_screen, p2_screen, {sample_x, sample_y})) {
-                        accumulated_color += color;
-                    } else {
-                        accumulated_color += Vector3{0.5, 0.5, 0.5}; // Default color
-                    }
-                }
+    for (int y = y_min; y <= y_max; y++) {
+        for (int x = x_min; x <= x_max; x++) {
+            if (is_inside_triangle(p0_screen, p1_screen, p2_screen, Vector2(x + 0.5, y + 0.5))) {
+                superImg(x, y) = color;
             }
-
-            // Average the samples and assign to pixel
-            img(x, y) = accumulated_color / Real(samples * samples);
         }
     }
+
+    // Downsampling
+    for (int y = 0; y < 480; y++) {
+        for (int x = 0; x < 640; x++) {
+            Vector3 sumColor = Vector3{0, 0, 0};
+            for (int dy = 0; dy < AA_FACTOR; dy++) {
+                for (int dx = 0; dx < AA_FACTOR; dx++) {
+                    sumColor += superImg(x * AA_FACTOR + dx, y * AA_FACTOR + dy);
+                }
+            }
+            img(x, y) = sumColor / Real(AA_FACTOR * AA_FACTOR);
+        }
+    }
+
     return img;
 }
 
@@ -152,6 +146,8 @@ Image3 hw_2_2(const std::vector<std::string> &params) {
     const int SUPER_HEIGHT = 480 * AA_FACTOR;
 
     Image3 superImg(SUPER_WIDTH, SUPER_HEIGHT);
+
+    std::vector<Real> z_buffer(SUPER_WIDTH * SUPER_HEIGHT, -std::numeric_limits<Real>::infinity());
 
     Image3 img(640 /* width */, 480 /* height */);
 
@@ -191,7 +187,7 @@ Image3 hw_2_2(const std::vector<std::string> &params) {
         int y_min = std::min({projected_v0.y, projected_v1.y, projected_v2.y});
         int y_max = std::max({projected_v0.y, projected_v1.y, projected_v2.y});
 
-        // Clip against screen bounds
+        // bounding box for fast rendering
         x_min = std::max(0, x_min);
         y_min = std::max(0, y_min);
         x_max = std::min(SUPER_WIDTH - 1, x_max);
@@ -199,8 +195,19 @@ Image3 hw_2_2(const std::vector<std::string> &params) {
 
         for (int y = y_min; y <= y_max; y++) {
             for (int x = x_min; x <= x_max; x++) {
-                if (is_inside_triangle(projected_v0, projected_v1, projected_v2, Vector2(x + 0.5, y + 0.5))) {
-                    superImg(x, y) = mesh.face_colors[&face - &mesh.faces[0]];
+                Vector2 pixel_center(x + 0.5, y + 0.5);
+                if (is_inside_triangle(projected_v0, projected_v1, projected_v2, pixel_center)) {
+                    Vector3 barycentric = barycentric_coordinates(projected_v0, projected_v1, projected_v2, pixel_center);
+
+                    if (barycentric.x < 0 || barycentric.y < 0 || barycentric.z < 0) continue;
+
+                    Real depth = barycentric.x * v0.z + barycentric.y * v1.z + barycentric.z * v2.z;
+
+                    int z_index = y * SUPER_WIDTH + x;
+                    if (depth > z_buffer[z_index]) {
+                        superImg(x, y) = mesh.face_colors[&face - &mesh.faces[0]];
+                        z_buffer[z_index] = depth;
+                    }
                 }
             }
         }
@@ -229,6 +236,8 @@ Image3 hw_2_3(const std::vector<std::string> &params) {
     const int AA_FACTOR = 4;
     const int SUPER_WIDTH = 640 * AA_FACTOR;
     const int SUPER_HEIGHT = 480 * AA_FACTOR;
+
+    std::vector<Real> z_buffer(SUPER_WIDTH * SUPER_HEIGHT, -std::numeric_limits<Real>::infinity());
 
     Image3 superImg(SUPER_WIDTH, SUPER_HEIGHT);
     Image3 img(640, 480);
@@ -273,7 +282,7 @@ Image3 hw_2_3(const std::vector<std::string> &params) {
         int y_min = std::min({projected_v0.y, projected_v1.y, projected_v2.y});
         int y_max = std::max({projected_v0.y, projected_v1.y, projected_v2.y});
 
-        // Clip against screen bounds
+        // bounding box for fast rendering
         x_min = std::max(0, x_min);
         y_min = std::max(0, y_min);
         x_max = std::min(SUPER_WIDTH - 1, x_max);
@@ -281,10 +290,22 @@ Image3 hw_2_3(const std::vector<std::string> &params) {
 
         for (int y = y_min; y <= y_max; y++) {
             for (int x = x_min; x <= x_max; x++) {
-                if (is_inside_triangle(projected_v0, projected_v1, projected_v2, Vector2(x + 0.5, y + 0.5))) {
-                    Vector3 barycentric = barycentric_coordinates(projected_v0, projected_v1, projected_v2, Vector2(x + 0.5, y + 0.5));
-                    Vector3 interpolated_color = barycentric.x * color0 + barycentric.y * color1 + barycentric.z * color2;
-                    superImg(x, y) = interpolated_color;
+                Vector2 pixel_center(x + 0.5, y + 0.5);
+                if (is_inside_triangle(projected_v0, projected_v1, projected_v2, pixel_center)) {
+                    Vector3 barycentric = barycentric_coordinates(projected_v0, projected_v1, projected_v2,
+                                                                  pixel_center);
+
+                    if (barycentric.x < 0 || barycentric.y < 0 || barycentric.z < 0) continue;
+
+                    Real depth = barycentric.x * v0.z + barycentric.y * v1.z + barycentric.z * v2.z;
+
+                    int z_index = y * SUPER_WIDTH + x;
+                    if (depth > z_buffer[z_index]) {
+                        Vector3 interpolated_color =
+                                barycentric.x * color0 + barycentric.y * color1 + barycentric.z * color2;
+                        superImg(x, y) = interpolated_color;
+                        z_buffer[z_index] = depth;
+                    }
                 }
             }
         }
