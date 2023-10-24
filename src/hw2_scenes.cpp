@@ -226,115 +226,112 @@ TriangleMesh parse_ply(const fs::path &filename) {
     return mesh;
 }
 
-    Matrix4x4 scale_matrix(const Vector3 &scale) {
-        return Matrix4x4(
-                Real(scale.x), Real(0), Real(0), Real(0),
-                Real(0), Real(scale.y), Real(0), Real(0),
-                Real(0), Real(0), Real(scale.z), Real(0),
-                Real(0), Real(0), Real(0), Real(1)
-        );
-    }
+Matrix4x4 scale_matrix(const Vector3 &scale) {
+    return Matrix4x4(
+            Real(scale.x), Real(0), Real(0), Real(0),
+            Real(0), Real(scale.y), Real(0), Real(0),
+            Real(0), Real(0), Real(scale.z), Real(0),
+            Real(0), Real(0), Real(0), Real(1)
+    );
+}
 
-    Matrix4x4 translate_matrix(const Vector3 &translate) {
-        return Matrix4x4(
-                Real(1), Real(0), Real(0), Real(translate.x),
-                Real(0), Real(1), Real(0), Real(translate.y),
-                Real(0), Real(0), Real(1), Real(translate.z),
-                Real(0), Real(0), Real(0), Real(1)
-        );
-    }
+Matrix4x4 translate_matrix(const Vector3 &translate) {
+    return Matrix4x4(
+            Real(1), Real(0), Real(0), Real(translate.x),
+            Real(0), Real(1), Real(0), Real(translate.y),
+            Real(0), Real(0), Real(1), Real(translate.z),
+            Real(0), Real(0), Real(0), Real(1)
+    );
+}
 
-    Matrix4x4 rotate_matrix(Real angle, const Vector3 &axis) {
-        Real rad = angle * Real(M_PI) / Real(180.0);
-        Real c = cos(rad);
-        Real s = sin(rad);
-        Real t = Real(1) - c;
+Matrix4x4 rotate_matrix(Real angle, const Vector3 &axis) {
+    Real rad = angle * Real(M_PI) / Real(180.0);
+    Real c = cos(rad);
+    Real s = sin(rad);
+    Real t = Real(1) - c;
 
-        Vector3 a = normalize(axis);
+    Vector3 a = normalize(axis);
 
-        return Matrix4x4(
-                t*a.x*a.x + c,     t*a.x*a.y - s*a.z, t*a.x*a.z + s*a.y, Real(0),
-                t*a.x*a.y + s*a.z, t*a.y*a.y + c,     t*a.y*a.z - s*a.x, Real(0),
-                t*a.x*a.z - s*a.y, t*a.y*a.z + s*a.x, t*a.z*a.z + c,     Real(0),
-                Real(0),           Real(0),           Real(0),           Real(1)
-        );
-    }
+    return Matrix4x4(
+            t*a.x*a.x + c,     t*a.x*a.y - s*a.z, t*a.x*a.z + s*a.y, Real(0),
+            t*a.x*a.y + s*a.z, t*a.y*a.y + c,     t*a.y*a.z - s*a.x, Real(0),
+            t*a.x*a.z - s*a.y, t*a.y*a.z + s*a.x, t*a.z*a.z + c,     Real(0),
+            Real(0),           Real(0),           Real(0),           Real(1)
+    );
+}
 
-    Matrix4x4 lookat_matrix(const Vector3& eye, const Vector3& target, const Vector3& up) {
-        Vector3 z = normalize(eye - target);  // Forward vector, normalized
-        Vector3 x = normalize(cross(up, z));  // Right vector, normalized
-        Vector3 y = cross(z, x);              // Up vector
+Matrix4x4 lookat_matrix(const Vector3& eye, const Vector3& target, const Vector3& up) {
+    Vector3 z = normalize(eye - target);  // Forward vector, normalized
+    Vector3 x = normalize(cross(up, z));  // Right vector, normalized
+    Vector3 y = cross(z, x);              // Up vector
 
-        return Matrix4x4(
-                Real(x.x), Real(y.x), Real(z.x), Real(-dot(x, eye)),
-                Real(x.y), Real(y.y), Real(z.y), Real(-dot(y, eye)),
-                Real(x.z), Real(y.z), Real(z.z), Real(-dot(z, eye)),
-                Real(0),   Real(0),   Real(0),   Real(1)
-        );
-    }
+    return Matrix4x4(
+            Real(x.x), Real(y.x), Real(z.x), Real(-dot(x, eye)),
+            Real(x.y), Real(y.y), Real(z.y), Real(-dot(y, eye)),
+            Real(x.z), Real(y.z), Real(z.z), Real(-dot(z, eye)),
+            Real(0),   Real(0),   Real(0),   Real(1)
+    );
+}
 
-
-
-
-    Matrix4x4 parse_transformation(const json &node) {
-    // Homework 2.4: parse a sequence of linear transformation and 
-    // combine them into a 4x4 transformation matrix
-    Matrix4x4 F = Matrix4x4::identity();
-    auto transform_it = node.find("transform");
-    if (transform_it == node.end()) {
-        // Transformation not specified, return identity.
-        return F;
-    }
-
-    for (auto it = transform_it->begin(); it != transform_it->end(); it++) {
-        if (auto scale_it = it->find("scale"); scale_it != it->end()) {
-            Vector3 scale = Vector3{
-                (*scale_it)[0], (*scale_it)[1], (*scale_it)[2]
-            };
-            // TODO (HW2.4): construct a scale matrix and composite with F
-            F = scale_matrix(scale) * F;
-
-        } else if (auto rotate_it = it->find("rotate"); rotate_it != it->end()) {
-            Real angle = (*rotate_it)[0];
-            Vector3 axis = normalize(Vector3{
-                (*rotate_it)[1], (*rotate_it)[2], (*rotate_it)[3]
-            });
-            F = rotate_matrix(angle, axis) * F;
-
-        } else if (auto translate_it = it->find("translate"); translate_it != it->end()) {
-            Vector3 translate = Vector3{
-                (*translate_it)[0], (*translate_it)[1], (*translate_it)[2]
-            };
-            // TODO (HW2.4): construct a translation matrix and composite with F
-            F = translate_matrix(translate) * F;
-
-        } else if (auto lookat_it = it->find("lookat"); lookat_it != it->end()) {
-            Vector3 position{0, 0, 0};
-            Vector3 target{0, 0, -1};
-            Vector3 up{0, 1, 0};
-            auto position_it = lookat_it->find("position");
-            auto target_it = lookat_it->find("target");
-            auto up_it = lookat_it->find("up");
-            if (position_it != lookat_it->end()) {
-                position = Vector3{
-                    (*position_it)[0], (*position_it)[1], (*position_it)[2]
-                };
-            }
-            if (target_it != lookat_it->end()) {
-                target = Vector3{
-                    (*target_it)[0], (*target_it)[1], (*target_it)[2]
-                };
-            }
-            if (up_it != lookat_it->end()) {
-                up = normalize(Vector3{
-                    (*up_it)[0], (*up_it)[1], (*up_it)[2]
-                });
-            }
-            // TODO (HW2.4): construct a lookat matrix and composite with F
-            F = lookat_matrix(position, target, up) * F;
-        }
-    }
+Matrix4x4 parse_transformation(const json &node) {
+// Homework 2.4: parse a sequence of linear transformation and
+// combine them into a 4x4 transformation matrix
+Matrix4x4 F = Matrix4x4::identity();
+auto transform_it = node.find("transform");
+if (transform_it == node.end()) {
+    // Transformation not specified, return identity.
     return F;
+}
+
+for (auto it = transform_it->begin(); it != transform_it->end(); it++) {
+    if (auto scale_it = it->find("scale"); scale_it != it->end()) {
+        Vector3 scale = Vector3{
+            (*scale_it)[0], (*scale_it)[1], (*scale_it)[2]
+        };
+        // TODO (HW2.4): construct a scale matrix and composite with F
+        F = scale_matrix(scale) * F;
+
+    } else if (auto rotate_it = it->find("rotate"); rotate_it != it->end()) {
+        Real angle = (*rotate_it)[0];
+        Vector3 axis = normalize(Vector3{
+            (*rotate_it)[1], (*rotate_it)[2], (*rotate_it)[3]
+        });
+        F = rotate_matrix(angle, axis) * F;
+
+    } else if (auto translate_it = it->find("translate"); translate_it != it->end()) {
+        Vector3 translate = Vector3{
+            (*translate_it)[0], (*translate_it)[1], (*translate_it)[2]
+        };
+        // TODO (HW2.4): construct a translation matrix and composite with F
+        F = translate_matrix(translate) * F;
+
+    } else if (auto lookat_it = it->find("lookat"); lookat_it != it->end()) {
+        Vector3 position{0, 0, 0};
+        Vector3 target{0, 0, -1};
+        Vector3 up{0, 1, 0};
+        auto position_it = lookat_it->find("position");
+        auto target_it = lookat_it->find("target");
+        auto up_it = lookat_it->find("up");
+        if (position_it != lookat_it->end()) {
+            position = Vector3{
+                (*position_it)[0], (*position_it)[1], (*position_it)[2]
+            };
+        }
+        if (target_it != lookat_it->end()) {
+            target = Vector3{
+                (*target_it)[0], (*target_it)[1], (*target_it)[2]
+            };
+        }
+        if (up_it != lookat_it->end()) {
+            up = normalize(Vector3{
+                (*up_it)[0], (*up_it)[1], (*up_it)[2]
+            });
+        }
+        // TODO (HW2.4): construct a lookat matrix and composite with F
+        F = lookat_matrix(position, target, up) * F;
+    }
+}
+return F;
 }
 
 Scene parse_scene(const fs::path &filename) {
