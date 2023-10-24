@@ -156,11 +156,17 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
     Vector2 p1_screen = toScreenSpace(p1_projected, SUPER_WIDTH, SUPER_HEIGHT, s);
     Vector2 p2_screen = toScreenSpace(p2_projected, SUPER_WIDTH, SUPER_HEIGHT, s);
 
-    // bounding box for fast rendering
-    int x_min = std::max(0, static_cast<int>(std::min({p0_screen.x, p1_screen.x, p2_screen.x})));
-    int x_max = std::min(SUPER_WIDTH - 1, static_cast<int>(std::max({p0_screen.x, p1_screen.x, p2_screen.x})));
-    int y_min = std::max(0, static_cast<int>(std::min({p0_screen.y, p1_screen.y, p2_screen.y})));
-    int y_max = std::min(SUPER_HEIGHT - 1, static_cast<int>(std::max({p0_screen.y, p1_screen.y, p2_screen.y})));
+    int x_min = std::min({p0_screen.x, p1_screen.x, p2_screen.x});
+    int x_max = std::max({p0_screen.x, p1_screen.x, p2_screen.x});
+    int y_min = std::min({p0_screen.y, p1_screen.y, p2_screen.y});
+    int y_max = std::max({p0_screen.y, p1_screen.y, p2_screen.y});
+
+// Bounding box for fast rendering
+    x_min = std::max(0, x_min);
+    y_min = std::max(0, y_min);
+    x_max = std::min(SUPER_WIDTH - 1, x_max);
+    y_max = std::min(SUPER_HEIGHT - 1, y_max);
+
 
     for (int y = y_min; y <= y_max; y++) {
         for (int x = x_min; x <= x_max; x++) {
@@ -356,7 +362,8 @@ Image3 hw_2_4(const std::vector<std::string> &params) {
 
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
-            img(x, y) = Vector3{1, 1, 1};
+            img(x, y) = scene.background;
+
         }
     }
     return img;
