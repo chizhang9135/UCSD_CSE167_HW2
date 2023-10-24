@@ -8,7 +8,7 @@ def generate_interpolated_jsons(filename):
         data = json.load(f)
 
     # get user desired offset
-    OFFSET = int(input("Enter offset: "))
+    OFFSET = float(input("Enter offset: "))
     max_steps = 0
 
     # Determine the maximum steps required for all transformations
@@ -18,13 +18,15 @@ def generate_interpolated_jsons(filename):
                 for _, value in transform.items():
                     if isinstance(value, list):
                         for v in value:
-                            steps = abs(v) // OFFSET
+                            steps = abs(v) / OFFSET
                             if steps > max_steps:
                                 max_steps = steps
                     elif isinstance(value, (int, float)):
-                        steps = abs(value) // OFFSET
+                        steps = abs(value) / OFFSET
                         if steps > max_steps:
                             max_steps = steps
+
+    max_steps = int(max_steps)  # Convert max_steps to an integer
 
     for step in range(1, max_steps + 1):
         new_data = copy.deepcopy(data)
@@ -56,4 +58,3 @@ if __name__ == "__main__":
     generate_interpolated_jsons(fileName)
     # remove the original file from previous step
     os.remove(fileName)
-
