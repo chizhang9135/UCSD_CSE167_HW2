@@ -1,0 +1,41 @@
+{
+    "camera": {
+        "resolution": [
+            320,
+            240
+        ],
+        "transform": [
+            {
+                "lookat": {
+                    "position": [
+                        133.0,
+                        -133.0,
+                        32
+                    ],
+                    "target": [
+                        0,
+                        0,
+                        32
+                    ],
+                    "up": [
+                        0,
+                        0,
+                        1
+                    ]
+                }
+            }
+        ],
+        "s": 0.4,
+        "z_near": 1e-06
+    },
+    "background": [
+        0.5,
+        0.5,
+        0.5
+    ],
+    "objects": [
+        {
+            "filename": "teapot_decimated.ply"
+        }
+    ]
+}

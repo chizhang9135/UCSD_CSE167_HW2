@@ -8,14 +8,14 @@
 1. using the same way as write up instruct to run
 2. pre-rendering image is in `output` folder
 3. My own scene is in `output` folder named `hw_2_5.png`
-4. Animation is in `output/animation` folder for cube and prism. The teapot do not have translation animation.
+4. Animation is in `output/animation` folder
+   1. for cube and prime, I interpolate the 3D transform for the object
+   2. for the teapot, I interpolate the 3D transform for the camera (lookat)
 
-
-More usage of the function see comments
 
 ## Extra Credit
 ### Part Completed:
-1. 2-1 clipping
-2. TODO
-3. 2-4 animation
+1. 2-1 clipping (Working)
+2. TODO (Planed)
+3. 2-4 animation (Done)
 
