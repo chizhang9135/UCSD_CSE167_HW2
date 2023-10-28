@@ -1,7 +1,8 @@
 # CSE 167 HW2
 
 ## Optimization I done:
-1. bounding box for hw_2_1, hw_2_2 and hw_2_3 for faster rendering
+1. bounding box for faster rendering
+2. clipping as extra credit for 2_1 for allow even if one vertex is outside the screen is still render
 
 ## Normal Part
 1. using the same way as write up instruct to run
@@ -18,4 +19,8 @@
 More usage of the function see comments
 
 ## Extra Credit
+### Part Completed:
+1. 2-1 clipping
+2. TODO
+3. 2-4 animation
 

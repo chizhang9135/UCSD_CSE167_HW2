@@ -75,6 +75,12 @@ int main(int argc, char *argv[]) {
     } else if (hw_num == "2_4") {
         Image3 img = hw_2_4(parameters);
         imwrite("hw_2_4.png", img);
+    } else if (hw_num == "2_5") {
+        Image3 img = hw_2_5(parameters);
+        imwrite("hw_2_5.png", img);
+    } else if (hw_num == "2_1_bonus") {
+        Image3 img = hw_2_1_bonus(parameters);
+        imwrite("hw_2_1_bonus.png", img);
     } else if (hw_num == "3_1") {
         hw_3_1(parameters);
     } else if (hw_num == "3_2") {
