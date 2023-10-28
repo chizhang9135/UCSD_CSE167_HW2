@@ -354,7 +354,7 @@ Vector3 transform_point(const Matrix4x4 &m, const Vector3 &p) {
     Vector4 p_transformed = m * p_homogeneous;
     return Vector3(p_transformed.x / p_transformed.w,
                    p_transformed.y / p_transformed.w,
-                   p_transformed.z / p_transformed.w);
+                    p_transformed.z / p_transformed.w);
 }
 
 

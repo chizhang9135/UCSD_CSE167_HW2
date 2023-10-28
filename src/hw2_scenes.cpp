@@ -259,16 +259,16 @@ Matrix4x4 translate_matrix(const Vector3 &translate) {
     }
 
 
-    Matrix4x4 lookat_matrix(const Vector3& eye, const Vector3& target, const Vector3& up) {
-    Vector3 z = normalize(eye - target);  // Forward vector, normalized
-    Vector3 x = normalize(cross(up, z));  // Right vector, normalized
-    Vector3 y = cross(z, x);              // Up vector
+    Matrix4x4 lookat_matrix(const Vector3& p, const Vector3& t, const Vector3& u) {
+    Vector3 d = normalize(t-p);  // Forward vector, normalized
+    Vector3 r = normalize(cross(d,u));  // Right vector, normalized
+    Vector3 u_prime = cross(r,d);              // Up vector
 
     return Matrix4x4(
-            Real(x.x), Real(y.x), Real(z.x), Real(eye.x),
-            Real(x.y), Real(y.y), Real(z.y), Real(eye.y),
-            Real(x.z), Real(y.z), Real(z.z), Real(eye.z),
-            Real(0),   Real(0),   Real(0),   Real(1)
+            Real(r.x), Real(u_prime.x), -Real(d.x), Real(p.x),
+            Real(r.y), Real(u_prime.y), -Real(d.y), Real(p.y),
+            Real(r.z), Real(u_prime.z), -Real(d.z), Real(p.z),
+            Real(0), Real(0), Real(0), Real(1)
     );
 }
 
