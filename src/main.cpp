@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
             std::filesystem::path input_path(dir_path);
             std::string output_dir = "out_" + input_path.filename().string();
 
-// Check and create output directory
+            // Check and create output directory
             if (!std::filesystem::exists(output_dir)) {
                 std::filesystem::create_directory(output_dir);
             }

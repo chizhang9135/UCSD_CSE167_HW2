@@ -111,6 +111,50 @@ Vector3 transform_point(const Matrix4x4 &m, const Vector3 &p) {
                    p_transformed.z / p_transformed.w);
 }
 
+std::vector<Vector3> clipTriangle(const Vector3& p0, const Vector3& p1, const Vector3& p2, Real z_near) {
+    // Helper lambda function to calculate intersection point between a line and the near clipping plane
+    auto intersect = [&](const Vector3& p1, const Vector3& p2) {
+        Real t = (z_near - p1.z) / (p2.z - p1.z);
+        return Vector3(
+                p1.x + t * (p2.x - p1.x),
+                p1.y + t * (p2.y - p1.y),
+                z_near
+        );
+    };
+
+    // Check each vertex against the near clipping plane
+    bool v0 = p0.z >= z_near;
+    bool v1 = p1.z >= z_near;
+    bool v2 = p2.z >= z_near;
+
+    // Handle different cases
+    if (v0 && v1 && v2) {
+        // All vertices are in front of the near clipping plane
+        return {p0, p1, p2};
+    } else if (v0 && v1) {
+        // p2 is behind the near clipping plane
+        return {p0, p1, intersect(p0, p2), intersect(p1, p2)};
+    } else if (v1 && v2) {
+        // p0 is behind the near clipping plane
+        return {p1, p2, intersect(p1, p0), intersect(p2, p0)};
+    } else if (v0 && v2) {
+        // p1 is behind the near clipping plane
+        return {p0, p2, intersect(p0, p1), intersect(p2, p1)};
+    } else if (v0) {
+        // p1 and p2 are behind the near clipping plane
+        return {p0, intersect(p0, p1), intersect(p0, p2)};
+    } else if (v1) {
+        // p0 and p2 are behind the near clipping plane
+        return {p1, intersect(p1, p0), intersect(p1, p2)};
+    } else if (v2) {
+        // p0 and p1 are behind the near clipping plane
+        return {p2, intersect(p2, p0), intersect(p2, p1)};
+    } else {
+        // All vertices are behind the near clipping plane
+        return {};
+    }
+}
+
 /**
  * Rendering a single 3D triangle
  * @param params The parameters of the scene
@@ -203,10 +247,11 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
 
 /**
  * triangle clipping
+ * In practice, instead of rejecting a triangle if one or two verices are behind the near clipping plane, graphics pipelines would implement triangle clipping (Fig. 5). As a bonus, you will implement the clipping of the triangles and render them correctly even when some vertices are behind the near clipping plane.
  * @param params
  * @return
  */
-Image3 hw_2_1_bonus(const std::vector<std::string> &params) {
+Image3 hw_2_1_bonus(const std::vector<std::string>& params) {
     Image3 img(640 /* width */, 480 /* height */);
 
     const int AA_FACTOR = 4;
@@ -220,7 +265,8 @@ Image3 hw_2_1_bonus(const std::vector<std::string> &params) {
     Real s = 1; // scaling factor of the view frustrum
     Vector3 color = Vector3{1.0, 0.5, 0.5};
     Real z_near = 1e-6; // distance of the near clipping plane
-    for (int i = 0; i < (int)params.size(); i++) {
+
+    for (size_t i = 0; i < params.size(); i++) {
         if (params[i] == "-s") {
             s = std::stof(params[++i]);
         } else if (params[i] == "-p0") {
@@ -247,10 +293,50 @@ Image3 hw_2_1_bonus(const std::vector<std::string> &params) {
 
     for (int y = 0; y < SUPER_HEIGHT; y++) {
         for (int x = 0; x < SUPER_WIDTH; x++) {
-            superImg(x, y) = Vector3{0.5, 0.5, 0.5}; // Default background color
+            superImg(x, y) = Vector3{0.5, 0.5, 0.5};
         }
     }
 
+    // Clip the Triangle
+    std::vector<Vector3> clipped_triangle = clipTriangle(p0, p1, p2, z_near);
+    if (clipped_triangle.size() < 3) {
+        // Triangle is completely behind the near clipping plane, return an empty image
+        return img;
+    }
+
+    // Update the triangle's vertices after clipping
+    p0 = clipped_triangle[0];
+    p1 = clipped_triangle[1];
+    p2 = clipped_triangle[2];
+
+    // Project the 3D triangle vertices to 2D
+    Vector2 p0_projected = project(p0);
+    Vector2 p1_projected = project(p1);
+    Vector2 p2_projected = project(p2);
+
+    // Convert the projected vertices to super-sampled screen space
+    Vector2 p0_screen = toScreenSpace(p0_projected, SUPER_WIDTH, SUPER_HEIGHT, s);
+    Vector2 p1_screen = toScreenSpace(p1_projected, SUPER_WIDTH, SUPER_HEIGHT, s);
+    Vector2 p2_screen = toScreenSpace(p2_projected, SUPER_WIDTH, SUPER_HEIGHT, s);
+
+    int x_min = std::min({p0_screen.x, p1_screen.x, p2_screen.x});
+    int x_max = std::max({p0_screen.x, p1_screen.x, p2_screen.x});
+    int y_min = std::min({p0_screen.y, p1_screen.y, p2_screen.y});
+    int y_max = std::max({p0_screen.y, p1_screen.y, p2_screen.y});
+
+    // Bounding box for fast rendering
+    x_min = std::max(0, x_min);
+    y_min = std::max(0, y_min);
+    x_max = std::min(SUPER_WIDTH - 1, x_max);
+    y_max = std::min(SUPER_HEIGHT - 1, y_max);
+
+    for (int y = y_min; y <= y_max; y++) {
+        for (int x = x_min; x <= x_max; x++) {
+            if (is_inside_triangle(p0_screen, p1_screen, p2_screen, Vector2(x + 0.5, y + 0.5))) {
+                superImg(x, y) = color;
+            }
+        }
+    }
 
     // Downsampling
     downsample(img, superImg, AA_FACTOR);
@@ -462,7 +548,7 @@ Image3 hw_2_4(const std::vector<std::string> &params) {
 
     for (int y = 0; y < SUPER_HEIGHT; y++) {
         for (int x = 0; x < SUPER_WIDTH; x++) {
-            superImg(x, y) = Vector3{0.5, 0.5, 0.5};
+            superImg(x, y) = Vector3{scene.background[0], scene.background[1], scene.background[2]}; // Default background color
         }
     }
 
