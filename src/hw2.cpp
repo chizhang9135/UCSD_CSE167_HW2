@@ -97,6 +97,25 @@ void downsample(Image3& img, const Image3& superImg, int AA_FACTOR) {
     }
 }
 
+/**
+ * Transform a point by a matrix from Matrix4x4 to Vector3
+ * @param m The transformation matrix
+ * @param p The point to be transformed
+ * @return The transformed point
+ */
+Vector3 transform_point(const Matrix4x4 &m, const Vector3 &p) {
+    Vector4 p_homogeneous(p.x, p.y, p.z, 1.0);
+    Vector4 p_transformed = m * p_homogeneous;
+    return Vector3(p_transformed.x / p_transformed.w,
+                   p_transformed.y / p_transformed.w,
+                   p_transformed.z / p_transformed.w);
+}
+
+/**
+ * Rendering a single 3D triangle
+ * @param params The parameters of the scene
+ * @return The rendered image
+ */
 Image3 hw_2_1(const std::vector<std::string> &params) {
     // Homework 2.1: render a single 3D triangle
 
@@ -182,6 +201,20 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
     return img;
 }
 
+/**
+ * triangle clipping
+ * @param params
+ * @return
+ */
+Image3 hw_2_1_bonus(const std::vector<std::string> &params) {
+
+}
+
+/**
+ * Render a triangle mesh
+ * @param params The parameters of the scene
+ * @return The rendered image
+ */
 Image3 hw_2_2(const std::vector<std::string> &params) {
     // Homework 2.2: render a triangle mesh
     const int AA_FACTOR = 4;
@@ -261,6 +294,11 @@ Image3 hw_2_2(const std::vector<std::string> &params) {
     return img;
 }
 
+/**
+ * Perspective-corrected interpolation
+ * @param params The parameters of the scene
+ * @return The rendered image
+ */
 Image3 hw_2_3(const std::vector<std::string> &params) {
     // Homework 2.3: render a triangle mesh with interpolated vertex colors and super-sampling
 
@@ -348,16 +386,11 @@ Image3 hw_2_3(const std::vector<std::string> &params) {
     return img;
 }
 
-
-Vector3 transform_point(const Matrix4x4 &m, const Vector3 &p) {
-    Vector4 p_homogeneous(p.x, p.y, p.z, 1.0);
-    Vector4 p_transformed = m * p_homogeneous;
-    return Vector3(p_transformed.x / p_transformed.w,
-                   p_transformed.y / p_transformed.w,
-                    p_transformed.z / p_transformed.w);
-}
-
-
+/**
+ * 3D transformation
+ * @param params The parameters of the scene
+ * @return The rendered image
+ */
 Image3 hw_2_4(const std::vector<std::string> &params) {
     // Homework 2.4: render a scene with transformation
     if (params.size() == 0) {
@@ -440,5 +473,14 @@ Image3 hw_2_4(const std::vector<std::string> &params) {
 
     downsample(img, superImg, AA_FACTOR);
     return img;
+}
+
+/**
+ * Dummy function. Rendering my own scene. Call hw_2_4 inside this function.
+ * @param params Given parameters
+ * @return my nice scene
+ */
+Image3 hw_2_5(const std::vector<std::string> &params) {
+    return hw_2_4(params);
 }
 
