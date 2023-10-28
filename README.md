@@ -7,14 +7,9 @@
 ## Normal Part
 1. using the same way as write up instruct to run
 2. pre-rendering image is in `output` folder
+3. My own scene is in `output` folder named `hw_2_5.png`
+4. Animation is in `output/animation` folder for cube and prism. The teapot do not have translation animation.
 
-## Helper Function
-
-- `bool is_inside_triangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p)`
-- `Vector2 project(const Vector3 &p)` 
-- `Vector2 toScreenSpace(const Vector2 &p, int width, int height, Real s)`
-- `Vector3 barycentric_coordinates(const Vector2 &A, const Vector2 &B, const Vector2 &C, const Vector2 &P)`
-- `void downsample(Image3& img, const Image3& superImg, int AA_FACTOR) `
 
 More usage of the function see comments
 
