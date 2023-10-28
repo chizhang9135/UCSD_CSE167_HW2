@@ -244,31 +244,30 @@ Matrix4x4 translate_matrix(const Vector3 &translate) {
     );
 }
 
-Matrix4x4 rotate_matrix(Real angle, const Vector3 &axis) {
-    Real rad = angle * Real(M_PI) / Real(180.0);
-    Real c = cos(rad);
-    Real s = sin(rad);
-    Real t = Real(1) - c;
+// Function to create a 4x4 rotation matrix based on an axis and angle
+    Matrix4x4 rotate_matrix(Real angle, const Vector3 &axis) {
+        Real rad = angle * Real(M_PI) / Real(180.0);  // Convert degrees to radians
+        Vector3 a = normalize(axis);  // Normalize the rotation axis
 
-    Vector3 a = normalize(axis);
+        // Construct the rotation matrix directly without precomputing terms
+        return Matrix4x4(
+                a.x * a.x * (1 - cos(rad)) + cos(rad),       a.x * a.y * (1 - cos(rad)) - a.z * sin(rad), a.x * a.z * (1 - cos(rad)) + a.y * sin(rad), Real(0),
+                a.x * a.y * (1 - cos(rad)) + a.z * sin(rad), a.y * a.y * (1 - cos(rad)) + cos(rad),       a.y * a.z * (1 - cos(rad)) - a.x * sin(rad), Real(0),
+                a.x * a.z * (1 - cos(rad)) - a.y * sin(rad), a.y * a.z * (1 - cos(rad)) + a.x * sin(rad), a.z * a.z * (1 - cos(rad)) + cos(rad),       Real(0),
+                Real(0),                                     Real(0),                                     Real(0),                                     Real(1)
+        );
+    }
 
-    return Matrix4x4(
-            t*a.x*a.x + c,     t*a.x*a.y - s*a.z, t*a.x*a.z + s*a.y, Real(0),
-            t*a.x*a.y + s*a.z, t*a.y*a.y + c,     t*a.y*a.z - s*a.x, Real(0),
-            t*a.x*a.z - s*a.y, t*a.y*a.z + s*a.x, t*a.z*a.z + c,     Real(0),
-            Real(0),           Real(0),           Real(0),           Real(1)
-    );
-}
 
-Matrix4x4 lookat_matrix(const Vector3& eye, const Vector3& target, const Vector3& up) {
+    Matrix4x4 lookat_matrix(const Vector3& eye, const Vector3& target, const Vector3& up) {
     Vector3 z = normalize(eye - target);  // Forward vector, normalized
     Vector3 x = normalize(cross(up, z));  // Right vector, normalized
     Vector3 y = cross(z, x);              // Up vector
 
     return Matrix4x4(
-            Real(x.x), Real(y.x), Real(z.x), Real(-dot(x, eye)),
-            Real(x.y), Real(y.y), Real(z.y), Real(-dot(y, eye)),
-            Real(x.z), Real(y.z), Real(z.z), Real(-dot(z, eye)),
+            Real(x.x), Real(y.x), Real(z.x), Real(eye.x),
+            Real(x.y), Real(y.y), Real(z.y), Real(eye.y),
+            Real(x.z), Real(y.z), Real(z.z), Real(eye.z),
             Real(0),   Real(0),   Real(0),   Real(1)
     );
 }

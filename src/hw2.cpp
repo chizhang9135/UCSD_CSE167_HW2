@@ -348,11 +348,22 @@ Image3 hw_2_3(const std::vector<std::string> &params) {
     return img;
 }
 
+
+Vector3 transform_point(const Matrix4x4 &m, const Vector3 &p) {
+    Vector4 p_homogeneous(p.x, p.y, p.z, 1.0);
+    Vector4 p_transformed = m * p_homogeneous;
+    return Vector3(p_transformed.x / p_transformed.w,
+                   p_transformed.y / p_transformed.w,
+                   p_transformed.z / p_transformed.w);
+}
+
+
 Image3 hw_2_4(const std::vector<std::string> &params) {
     // Homework 2.4: render a scene with transformation
     if (params.size() == 0) {
         return Image3(0, 0);
     }
+
 
     Scene scene = parse_scene(params[0]);
     std::cout << scene << std::endl;
@@ -360,12 +371,74 @@ Image3 hw_2_4(const std::vector<std::string> &params) {
     Image3 img(scene.camera.resolution.x,
                scene.camera.resolution.y);
 
-    for (int y = 0; y < img.height; y++) {
-        for (int x = 0; x < img.width; x++) {
-            img(x, y) = scene.background;
+    const int AA_FACTOR = 4;
+    const int SUPER_WIDTH = scene.camera.resolution.x * AA_FACTOR;
+    const int SUPER_HEIGHT = scene.camera.resolution.y * AA_FACTOR;
 
+    Image3 superImg(SUPER_WIDTH, SUPER_HEIGHT);
+
+    std::vector<Real> z_buffer(SUPER_WIDTH * SUPER_HEIGHT, -std::numeric_limits<Real>::infinity());
+
+    for (int y = 0; y < SUPER_HEIGHT; y++) {
+        for (int x = 0; x < SUPER_WIDTH; x++) {
+            superImg(x, y) = Vector3{0.5, 0.5, 0.5};
         }
     }
+
+    for (const auto &mesh : scene.meshes) {
+        for (const auto &face: mesh.faces) {
+            Vector3 v0 = mesh.vertices[face[0]];
+            Vector3 v1 = mesh.vertices[face[1]];
+            Vector3 v2 = mesh.vertices[face[2]];
+
+            Vector3 color0 = mesh.vertex_colors[face[0]];
+            Vector3 color1 = mesh.vertex_colors[face[1]];
+            Vector3 color2 = mesh.vertex_colors[face[2]];
+
+            // calculate the model view matrix
+            Matrix4x4 view = inverse(scene.camera.cam_to_world);
+            Matrix4x4 model_view = view * mesh.model_matrix;
+
+            Vector2 projected_v0 = toScreenSpace(project(transform_point(model_view, v0)), SUPER_WIDTH, SUPER_HEIGHT, scene.camera.s);
+            Vector2 projected_v1 = toScreenSpace(project(transform_point(model_view, v1)), SUPER_WIDTH, SUPER_HEIGHT, scene.camera.s);
+            Vector2 projected_v2 = toScreenSpace(project(transform_point(model_view, v2)), SUPER_WIDTH, SUPER_HEIGHT, scene.camera.s);
+
+            int x_min = std::min({projected_v0.x, projected_v1.x, projected_v2.x});
+            int x_max = std::max({projected_v0.x, projected_v1.x, projected_v2.x});
+            int y_min = std::min({projected_v0.y, projected_v1.y, projected_v2.y});
+            int y_max = std::max({projected_v0.y, projected_v1.y, projected_v2.y});
+
+            // bounding box for fast rendering
+            x_min = std::max(0, x_min);
+            y_min = std::max(0, y_min);
+            x_max = std::min(SUPER_WIDTH - 1, x_max);
+            y_max = std::min(SUPER_HEIGHT - 1, y_max);
+
+            for (int y = y_min; y <= y_max; y++) {
+                for (int x = x_min; x <= x_max; x++) {
+                    Vector2 pixel_center(x + 0.5, y + 0.5);
+                    if (is_inside_triangle(projected_v0, projected_v1, projected_v2, pixel_center)) {
+                        Vector3 barycentric = barycentric_coordinates(projected_v0, projected_v1, projected_v2,
+                                                                      pixel_center);
+
+                        if (barycentric.x < 0 || barycentric.y < 0 || barycentric.z < 0) continue;
+
+                        Real depth = barycentric.x * v0.z + barycentric.y * v1.z + barycentric.z * v2.z;
+
+                        int z_index = y * SUPER_WIDTH + x;
+                        if (depth > z_buffer[z_index]) {
+                            Vector3 interpolated_color =
+                                    barycentric.x * color0 + barycentric.y * color1 + barycentric.z * color2;
+                            superImg(x, y) = interpolated_color;
+                            z_buffer[z_index] = depth;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    downsample(img, superImg, AA_FACTOR);
     return img;
 }
 
