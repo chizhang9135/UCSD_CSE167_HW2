@@ -83,7 +83,7 @@ Vector3 barycentric_coordinates(const Vector2 &A, const Vector2 &B, const Vector
  * @param superImg The super-sampled image
  * @param AA_FACTOR The anti-aliasing factor
  */
-void downsample(Image3& img, const Image3& superImg, int AA_FACTOR) {
+void down_sampled(Image3& img, const Image3& superImg, int AA_FACTOR) {
     for (int y = 0; y < img.height; y++) {
         for (int x = 0; x < img.width; x++) {
             Vector3 sumColor = Vector3{0, 0, 0};
@@ -240,7 +240,7 @@ Image3 hw_2_1(const std::vector<std::string> &params) {
     }
 
     // Downsampling
-    downsample(img, superImg, AA_FACTOR);
+    down_sampled(img, superImg, AA_FACTOR);
 
     return img;
 }
@@ -339,7 +339,7 @@ Image3 hw_2_1_bonus(const std::vector<std::string>& params) {
     }
 
     // Downsampling
-    downsample(img, superImg, AA_FACTOR);
+    down_sampled(img, superImg, AA_FACTOR);
 
     return img;
 }
@@ -424,7 +424,7 @@ Image3 hw_2_2(const std::vector<std::string> &params) {
     }
 
     // Downsampling
-    downsample(img, superImg, AA_FACTOR);
+    down_sampled(img, superImg, AA_FACTOR);
     return img;
 }
 
@@ -515,7 +515,7 @@ Image3 hw_2_3(const std::vector<std::string> &params) {
     }
 
     // Downsampling
-    downsample(img, superImg, AA_FACTOR);
+    down_sampled(img, superImg, AA_FACTOR);
 
     return img;
 }
@@ -605,7 +605,7 @@ Image3 hw_2_4(const std::vector<std::string> &params) {
         }
     }
 
-    downsample(img, superImg, AA_FACTOR);
+    down_sampled(img, superImg, AA_FACTOR);
     return img;
 }
 
