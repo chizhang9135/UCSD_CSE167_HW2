@@ -111,6 +111,14 @@ Vector3 transform_point(const Matrix4x4 &m, const Vector3 &p) {
                    p_transformed.z / p_transformed.w);
 }
 
+/**
+ * Clip a triangle against the near clipping plane
+ * @param p0 The first vertex of the triangle
+ * @param p1 The second vertex of the triangle
+ * @param p2 The third vertex of the triangle
+ * @param z_near The distance of the near clipping plane
+ * @return The clipped triangle vertices
+ */
 std::vector<Vector3> clipTriangle(const Vector3& p0, const Vector3& p1, const Vector3& p2, Real z_near) {
     // Helper lambda function to calculate intersection point between a line and the near clipping plane
     auto intersect = [&](const Vector3& p1, const Vector3& p2) {
@@ -301,6 +309,7 @@ Image3 hw_2_1_bonus(const std::vector<std::string>& params) {
     std::vector<Vector3> clipped_triangle = clipTriangle(p0, p1, p2, z_near);
     if (clipped_triangle.size() < 3) {
         // Triangle is completely behind the near clipping plane, return an empty image
+        down_sampled(img, superImg, AA_FACTOR);
         return img;
     }
 
