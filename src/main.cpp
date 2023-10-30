@@ -90,8 +90,17 @@ int main(int argc, char *argv[]) {
         Image3 img = hw_2_1(parameters);
         imwrite("hw_2_1.png", img);
     } else if (hw_num == "2_2") {
+        auto start = std::chrono::high_resolution_clock::now();
         Image3 img = hw_2_2(parameters);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << "hw_2_2 took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " milliseconds." << std::endl;
         imwrite("hw_2_2.png", img);
+    } else if (hw_num == "2_2_bonus") {
+        auto start = std::chrono::high_resolution_clock::now();
+        Image3 img = hw_2_2_bonus(parameters);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << "hw_2_2_bonus took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " milliseconds." << std::endl;
+        imwrite("hw_2_2_bonus.png", img);
     } else if (hw_num == "2_3") {
         Image3 img = hw_2_3(parameters);
         imwrite("hw_2_3.png", img);

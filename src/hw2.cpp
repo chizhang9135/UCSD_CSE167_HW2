@@ -438,6 +438,103 @@ Image3 hw_2_2(const std::vector<std::string> &params) {
 }
 
 /**
+ * occlusion culling (Faster Rendering)
+ * @param params The parameters of the scene
+ * @return The rendered image
+ */
+Image3 hw_2_2_bonus(const std::vector<std::string> &params) {
+    const int AA_FACTOR = 4;
+    const int SUPER_WIDTH = 640 * AA_FACTOR;
+    const int SUPER_HEIGHT = 480 * AA_FACTOR;
+
+    Image3 superImg(SUPER_WIDTH, SUPER_HEIGHT);
+
+    std::vector<Real> z_buffer(SUPER_WIDTH * SUPER_HEIGHT, -std::numeric_limits<Real>::infinity());
+
+    Image3 img(640 /* width */, 480 /* height */);
+
+    Real s = 1; // scaling factor of the view frustrum
+    Real z_near = 1e-6; // distance of the near clipping plane
+    int scene_id = 0;
+    for (int i = 0; i < (int)params.size(); i++) {
+        if (params[i] == "-s") {
+            s = std::stof(params[++i]);
+        } else if (params[i] == "-znear") {
+            z_near = std::stof(params[++i]);
+        } else if (params[i] == "-scene_id") {
+            scene_id = std::stoi(params[++i]);
+        }
+    }
+
+    TriangleMesh mesh = meshes[scene_id];
+
+    for (int y = 0; y < SUPER_HEIGHT; y++) {
+        for (int x = 0; x < SUPER_WIDTH; x++) {
+            superImg(x, y) = Vector3{0.5, 0.5, 0.5};
+        }
+    }
+    for (const auto &face : mesh.faces) {
+        Vector3 v0 = mesh.vertices[face[0]];
+        Vector3 v1 = mesh.vertices[face[1]];
+        Vector3 v2 = mesh.vertices[face[2]];
+
+        Vector2 projected_v0 = toScreenSpace(project(v0), SUPER_WIDTH, SUPER_HEIGHT, s);
+        Vector2 projected_v1 = toScreenSpace(project(v1), SUPER_WIDTH, SUPER_HEIGHT, s);
+        Vector2 projected_v2 = toScreenSpace(project(v2), SUPER_WIDTH, SUPER_HEIGHT, s);
+
+        int x_min = std::min({projected_v0.x, projected_v1.x, projected_v2.x});
+        int x_max = std::max({projected_v0.x, projected_v1.x, projected_v2.x});
+        int y_min = std::min({projected_v0.y, projected_v1.y, projected_v2.y});
+        int y_max = std::max({projected_v0.y, projected_v1.y, projected_v2.y});
+
+        // Bounding box for fast rendering
+        x_min = std::max(0, x_min);
+        y_min = std::max(0, y_min);
+        x_max = std::min(SUPER_WIDTH - 1, x_max);
+        y_max = std::min(SUPER_HEIGHT - 1, y_max);
+
+        bool occluded = true;
+        for (int y = y_min; y <= y_max && occluded; y++) {
+            for (int x = x_min; x <= x_max && occluded; x++) {
+                int z_index = y * SUPER_WIDTH + x;
+                Real max_triangle_depth = std::max({v0.z, v1.z, v2.z});
+                if (z_buffer[z_index] < max_triangle_depth) {
+                    occluded = false;
+                }
+            }
+        }
+
+        if (occluded) {
+            continue; // Skip rendering this triangle, it's completely occluded
+        }
+
+        // Rasterize and render the triangle
+        for (int y = y_min; y <= y_max; y++) {
+            for (int x = x_min; x <= x_max; x++) {
+                Vector2 pixel_center(x + 0.5, y + 0.5);
+                if (is_inside_triangle(projected_v0, projected_v1, projected_v2, pixel_center)) {
+                    Vector3 barycentric = barycentric_coordinates(projected_v0, projected_v1, projected_v2, pixel_center);
+
+                    if (barycentric.x < 0 || barycentric.y < 0 || barycentric.z < 0) continue;
+
+                    Real depth = barycentric.x * v0.z + barycentric.y * v1.z + barycentric.z * v2.z;
+
+                    int z_index = y * SUPER_WIDTH + x;
+                    if (depth > z_buffer[z_index]) {
+                        superImg(x, y) = mesh.face_colors[&face - &mesh.faces[0]];
+                        z_buffer[z_index] = depth;
+                    }
+                }
+            }
+        }
+    }
+
+    // Downsampling
+    down_sampled(img, superImg, AA_FACTOR);
+    return img;
+}
+
+/**
  * Perspective-corrected interpolation
  * @param params The parameters of the scene
  * @return The rendered image

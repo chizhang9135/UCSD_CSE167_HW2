@@ -41,7 +41,17 @@
       2. `with_clipping.png`: with clipping
 
 
-2. 2-2 (Working on)
+2. 2-2 (Done)
+   1. Now, the 2_2 and 2_2_bonus will print how long it takes to render the image.
+   2. after occluded, it is faster
+   3. example output as acceleration:
+   ```shell
+   # chizhang@Chis-MacBook-Pro cmake-build-debug % ./balboa -hw 2_2_bonus -s 1 -znear 1e-6 -scene_id 1
+   hw_2_2_bonus took 27 milliseconds.
+   # chizhang@Chis-MacBook-Pro cmake-build-debug % ./balboa -hw 2_2 -s 1 -znear 1e-6 -scene_id 1
+   hw_2_2 took 42 milliseconds.
+   ```
+   The output image is under `output/bonus_2_2` folder as `hw_2_2_bonus-id1.png`. We can see it is identical to `hw_2_2_1.png` under `output` but faster.
 
 
 3. 2-4 animation (Done)

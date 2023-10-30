@@ -112,6 +112,8 @@ TriangleMesh mesh3 {
      {0.8, 0.8, 0.2}}
 };
 
+
+
 std::vector<TriangleMesh> meshes = {mesh0, mesh1, mesh2, mesh3};
 
 TriangleMesh parse_ply(const fs::path &filename) {
@@ -244,32 +246,30 @@ Matrix4x4 translate_matrix(const Vector3 &translate) {
     );
 }
 
-// Function to create a 4x4 rotation matrix based on an axis and angle
-    Matrix4x4 rotate_matrix(Real angle, const Vector3 &axis) {
-        Real rad = angle * Real(M_PI) / Real(180.0);  // Convert degrees to radians
-        Vector3 a = normalize(axis);  // Normalize the rotation axis
+Matrix4x4 rotate_matrix(Real angle, const Vector3 &axis) {
+    Real rad = angle * Real(M_PI) / Real(180.0);  // Convert degrees to radians
+    Vector3 a = normalize(axis);  // Normalize the rotation axis
 
-        // Construct the rotation matrix directly without precomputing terms
-        return Matrix4x4(
-                a.x * a.x * (1 - cos(rad)) + cos(rad),       a.x * a.y * (1 - cos(rad)) - a.z * sin(rad), a.x * a.z * (1 - cos(rad)) + a.y * sin(rad), Real(0),
-                a.x * a.y * (1 - cos(rad)) + a.z * sin(rad), a.y * a.y * (1 - cos(rad)) + cos(rad),       a.y * a.z * (1 - cos(rad)) - a.x * sin(rad), Real(0),
-                a.x * a.z * (1 - cos(rad)) - a.y * sin(rad), a.y * a.z * (1 - cos(rad)) + a.x * sin(rad), a.z * a.z * (1 - cos(rad)) + cos(rad),       Real(0),
-                Real(0),                                     Real(0),                                     Real(0),                                     Real(1)
-        );
-    }
-
-
-    Matrix4x4 lookat_matrix(const Vector3& p, const Vector3& t, const Vector3& u) {
-    Vector3 d = normalize(t-p);  // Forward vector, normalized
-    Vector3 r = normalize(cross(d,u));  // Right vector, normalized
-    Vector3 u_prime = cross(r,d);              // Up vector
-
+    // Construct the rotation matrix directly without precomputing terms
     return Matrix4x4(
-            Real(r.x), Real(u_prime.x), -Real(d.x), Real(p.x),
-            Real(r.y), Real(u_prime.y), -Real(d.y), Real(p.y),
-            Real(r.z), Real(u_prime.z), -Real(d.z), Real(p.z),
-            Real(0), Real(0), Real(0), Real(1)
+            a.x * a.x * (1 - cos(rad)) + cos(rad),       a.x * a.y * (1 - cos(rad)) - a.z * sin(rad), a.x * a.z * (1 - cos(rad)) + a.y * sin(rad), Real(0),
+            a.x * a.y * (1 - cos(rad)) + a.z * sin(rad), a.y * a.y * (1 - cos(rad)) + cos(rad),       a.y * a.z * (1 - cos(rad)) - a.x * sin(rad), Real(0),
+            a.x * a.z * (1 - cos(rad)) - a.y * sin(rad), a.y * a.z * (1 - cos(rad)) + a.x * sin(rad), a.z * a.z * (1 - cos(rad)) + cos(rad),       Real(0),
+            Real(0),                                     Real(0),                                     Real(0),                                     Real(1)
     );
+}
+
+Matrix4x4 lookat_matrix(const Vector3& p, const Vector3& t, const Vector3& u) {
+Vector3 d = normalize(t-p);  // Forward vector, normalized
+Vector3 r = normalize(cross(d,u));  // Right vector, normalized
+Vector3 u_prime = cross(r,d);              // Up vector
+
+return Matrix4x4(
+        Real(r.x), Real(u_prime.x), -Real(d.x), Real(p.x),
+        Real(r.y), Real(u_prime.y), -Real(d.y), Real(p.y),
+        Real(r.z), Real(u_prime.z), -Real(d.z), Real(p.z),
+        Real(0), Real(0), Real(0), Real(1)
+);
 }
 
 Matrix4x4 parse_transformation(const json &node) {
